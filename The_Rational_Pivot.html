@@ -1,0 +1,2116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Rational Pivot | Huzaifah Adam</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Playfair+Display:ital@0;1;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            darkest: '#022c22',
+                            dark: '#064e3b',
+                            primary: '#10b981',
+                            accent: '#bef264',
+                            text: '#f0fdf4',
+                            muted: '#9ca3af'
+                        },
+                        desert: {
+                            skyTop: '#0ea5e9',
+                            skyMid: '#fcd34d',
+                            skyBot: '#f59e0b',
+                            primary: '#d97706',
+                            accent: '#b45309',
+                            text: '#fdf6e3',
+                            dune1: '#b45309',
+                            dune2: '#92400e',
+                            dune3: '#78350f',
+                            muted: '#cbd5e1'
+                        },
+                        park: {
+                            skyTop: '#38bdf8',
+                            skyBot: '#bae6fd',
+                            grass1: '#16a34a',
+                            grass2: '#22c55e',
+                            grass3: '#4ade80',
+                            primary: '#059669',
+                            accent: '#fbbf24',
+                            text: '#0f172a',
+                            muted: '#475569'
+                        },
+                        twilight: {
+                            skyTop: '#020617',
+                            skyMid: '#1e1b4b',
+                            skyBot: '#312e81',
+                            primary: '#818cf8',
+                            accent: '#fde047',
+                            text: '#f8fafc',
+                            hill1: '#0f172a',
+                            hill2: '#1e293b',
+                            hill3: '#334155',
+                            muted: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #020617;
+            color: #f0fdf4;
+            overflow: hidden;
+            touch-action: none;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            opacity: 0;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        /* Helper for cross-fading background/decor layers between themes */
+        .theme-layer {
+            transition: opacity 1s ease;
+            opacity: 0;
+        }
+        .theme-layer.theme-visible {
+            opacity: 1;
+        }
+
+        /* === Glassmorphism: default (spring/winter forest) === */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .glass-card-winter {
+            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        /* === Glassmorphism: desert (Session 3) === */
+        .theme-desert .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(217, 119, 6, 0.3);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* === Glassmorphism: park (Session 4) === */
+        .theme-park .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* === Glassmorphism: twilight (Session 5) === */
+        .theme-twilight .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Floating avatar animations (shared timing across themes) */
+        .floating-avatar {
+            animation: floaty 6s ease-in-out infinite;
+            filter: drop-shadow(0px 15px 20px rgba(0,0,0,0.35));
+        }
+        @keyframes floaty {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(1.5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        /* Particles: Spring fireflies */
+        .firefly {
+            position: absolute;
+            background-color: #bef264;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 10px 2px rgba(190, 242, 100, 0.6);
+            animation: drift 15s linear infinite, blink 4s ease-in-out infinite alternate;
+        }
+        @keyframes drift {
+            0% { transform: translateY(100vh) translateX(0); }
+            100% { transform: translateY(-10vh) translateX(100px); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Particles: Winter snow */
+        .snowflake {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.6);
+            animation: fall 12s linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-10vh) translateX(0); opacity: 0.8; }
+            100% { transform: translateY(110vh) translateX(100px); opacity: 0; }
+        }
+
+        /* Particles: Desert dust */
+        .dust-particle {
+            position: absolute;
+            background-color: #fef3c7;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.6);
+            animation: blowRight 8s linear infinite;
+        }
+        @keyframes blowRight {
+            0% { transform: translate(-10vw, 0) scale(0.5); opacity: 0; }
+            20% { opacity: 0.4; }
+            80% { opacity: 0.4; }
+            100% { transform: translate(110vw, -10vh) scale(1.2); opacity: 0; }
+        }
+
+        /* Particles: Park sunlight motes */
+        .sun-mote {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 10px 3px rgba(253, 230, 138, 0.5);
+            animation: floatUp 12s linear infinite;
+        }
+        @keyframes floatUp {
+            0% { transform: translate(0, 110vh) scale(0.5); opacity: 0; }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { transform: translate(15vw, -10vh) scale(1.2); opacity: 0; }
+        }
+
+        /* Particles: Twilight stars */
+        .star {
+            position: absolute;
+            background-color: #ffffff;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.8);
+            animation: twinkle var(--duration) ease-in-out infinite alternate;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.1; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+        .shooting-star {
+            position: absolute;
+            width: 100px;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transform: rotate(-45deg);
+            pointer-events: none;
+            animation: shoot 8s linear infinite;
+        }
+        @keyframes shoot {
+            0% { transform: translate(100vw, -10vh) rotate(-45deg); opacity: 1; }
+            5% { transform: translate(-10vw, 100vh) rotate(-45deg); opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        /* Landscape layers (mountains / dunes / hills) */
+        .mountain-layer, .dune-layer, .landscape-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .timeline-scroll {
+            max-height: 65vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(16, 185, 129, 0.5) transparent;
+        }
+        .timeline-scroll::-webkit-scrollbar { width: 4px; }
+        .timeline-scroll::-webkit-scrollbar-track { background: transparent; }
+        .timeline-scroll::-webkit-scrollbar-thumb { background-color: rgba(16, 185, 129, 0.5); border-radius: 10px; }
+
+        .content-container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .text-content {
+            width: 100%;
+            max-width: 800px;
+            z-index: 10;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .content-container { justify-content: center; }
+            .floating-avatar-container { opacity: 0.15; z-index: 0; }
+        }
+
+        /* 3D Flip Card CSS */
+        .flip-card {
+            background-color: transparent;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+        .avatar-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-primary selection:text-white">
+
+    <!-- ===================== THEME BACKGROUND GRADIENTS ===================== -->
+    <div id="bg-spring" class="fixed inset-0 -z-20 theme-layer theme-visible" style="background: linear-gradient(to bottom, #022c22, #064e3b);"></div>
+    <div id="bg-winter" class="fixed inset-0 -z-20 theme-layer" style="background: linear-gradient(to bottom, #0f172a, #172554);"></div>
+    <div id="bg-desert" class="fixed inset-0 -z-20 theme-layer" style="background: linear-gradient(to bottom, #0ea5e9, #fcd34d, #f59e0b);"></div>
+    <div id="bg-park" class="fixed inset-0 -z-20 theme-layer" style="background: linear-gradient(to bottom, #38bdf8, #bae6fd, #d9f99d);"></div>
+    <div id="bg-twilight" class="fixed inset-0 -z-20 theme-layer" style="background: linear-gradient(to bottom, #020617 20%, #1e1b4b 60%, #312e81 100%);"></div>
+
+    <!-- ===================== SKY ACCENTS (sun / moon) ===================== -->
+    <div id="accent-desert" class="fixed top-8 right-8 md:top-12 md:right-16 -z-10 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full shadow-[0_0_60px_30px_rgba(253,224,71,0.8)] theme-layer"></div>
+    <div id="accent-park" class="fixed top-12 left-12 md:top-20 md:left-24 -z-10 w-24 h-24 md:w-32 md:h-32 bg-white rounded-full shadow-[0_0_80px_40px_rgba(253,230,138,0.8)] theme-layer"></div>
+    <div id="accent-twilight" class="fixed top-1/4 left-1/2 -translate-x-1/2 -z-10 w-[80vw] h-[80vw] max-w-2xl max-h-2xl rounded-full shadow-[0_0_120px_60px_rgba(49,46,129,0.3)] bg-indigo-900/10 blur-3xl theme-layer pointer-events-none"></div>
+
+    <!-- ===================== PARTICLE SYSTEMS ===================== -->
+    <div id="fireflies-container" class="absolute inset-0 overflow-hidden z-0 theme-layer theme-visible"></div>
+    <div id="snow-container" class="absolute inset-0 overflow-hidden z-0 theme-layer"></div>
+    <div id="dust-container" class="absolute inset-0 overflow-hidden z-0 theme-layer pointer-events-none"></div>
+    <div id="particle-container" class="absolute inset-0 overflow-hidden z-0 theme-layer pointer-events-none"></div>
+    <div id="star-container" class="absolute inset-0 overflow-hidden z-0 theme-layer pointer-events-none"></div>
+    <div id="shooting-stars" class="theme-layer">
+        <div class="shooting-star" style="top: 10%; animation-delay: 2s;"></div>
+        <div class="shooting-star" style="top: 30%; animation-delay: 6s;"></div>
+    </div>
+
+    <!-- ===================== LANDSCAPE LAYERS ===================== -->
+    <div id="landscape-spring-winter" class="theme-layer">
+<!-- Mountain SVG Layers -->
+    <svg class="mountain-layer" style="height: 40vh; opacity: 0.6;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path id="mountain-back" fill="#043a2b" fill-opacity="1" d="M0,224L48,197.3C96,171,192,117,288,117.3C384,117,480,171,576,192C672,213,768,203,864,170.7C960,139,1056,85,1152,80C1248,75,1344,117,1392,138.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+    <svg class="mountain-layer" style="height: 30vh; opacity: 0.8;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path id="mountain-mid" fill="#064e3b" fill-opacity="1" d="M0,160L60,170.7C120,181,240,203,360,186.7C480,171,600,117,720,122.7C840,128,960,192,1080,208C1200,224,1320,192,1380,176L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+    </svg>
+    <svg class="mountain-layer" style="height: 20vh; opacity: 1;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path id="mountain-front" fill="#022c22" fill-opacity="1" d="M0,288L80,272C160,256,320,224,480,213.3C640,203,800,213,960,224C1120,235,1280,245,1360,250.7L1440,256L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+    </svg>
+
+    
+</div>
+    <div id="landscape-desert" class="theme-layer">
+<!-- Sand Dune SVG Layers -->
+    <svg class="dune-layer" style="height: 40vh; opacity: 0.9;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#b45309" d="M0,160L80,181.3C160,203,320,245,480,240C640,235,800,181,960,170.7C1120,160,1280,192,1360,208L1440,224L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+    </svg>
+    <svg class="dune-layer" style="height: 30vh; opacity: 0.95;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#92400e" d="M0,256L60,240C120,224,240,192,360,197.3C480,203,600,245,720,250.7C840,256,960,224,1080,202.7C1200,181,1320,171,1380,165.3L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+    </svg>
+    <svg class="dune-layer" style="height: 15vh; opacity: 1;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#78350f" d="M0,224L120,213.3C240,203,480,181,720,186.7C960,192,1200,224,1320,240L1440,256L1440,320L1320,320C1200,320,960,320,720,320C480,320,240,320,120,320L0,320Z"></path>
+    </svg>
+
+    
+</div>
+    <div id="landscape-park" class="theme-layer">
+<!-- Park Hills SVG Layers -->
+    <svg class="landscape-layer" style="height: 35vh; opacity: 0.9;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#4ade80" d="M0,96L80,122.7C160,149,320,203,480,213.3C640,224,800,192,960,176C1120,160,1280,160,1360,160L1440,160L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+    </svg>
+    <svg class="landscape-layer" style="height: 25vh; opacity: 0.95;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#22c55e" d="M0,224L60,208C120,192,240,160,360,170.7C480,181,600,235,720,234.7C840,235,960,181,1080,149.3C1200,117,1320,107,1380,101.3L1440,96L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+    </svg>
+    <svg class="landscape-layer" style="height: 12vh; opacity: 1;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#16a34a" d="M0,256L120,240C240,224,480,192,720,192C960,192,1200,224,1320,240L1440,256L1440,320L1320,320C1200,320,960,320,720,320C480,320,240,320,120,320L0,320Z"></path>
+    </svg>
+
+    
+</div>
+    <div id="landscape-twilight" class="theme-layer">
+<!-- Silhouette Hills SVG Layers -->
+    <svg class="landscape-layer" style="height: 35vh; opacity: 0.8;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#0f172a" d="M0,224L80,197.3C160,171,320,117,480,128C640,139,800,213,960,224C1120,235,1280,181,1360,154.7L1440,128L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
+    </svg>
+    <svg class="landscape-layer" style="height: 25vh; opacity: 0.9;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#1e293b" d="M0,128L60,149.3C120,171,240,213,360,208C480,203,600,149,720,154.7C840,160,960,224,1080,234.7C1200,245,1320,203,1380,181.3L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+    </svg>
+    <svg class="landscape-layer" style="height: 12vh; opacity: 1;" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#020617" d="M0,256L120,245.3C240,235,480,213,720,218.7C960,224,1200,256,1320,272L1440,288L1440,320L1320,320C1200,320,960,320,720,320C480,320,240,320,120,320L0,320Z"></path>
+    </svg>
+
+    
+</div>
+
+    <!-- ===================== FLOATING AVATARS ===================== -->
+    <div id="avatar-spring-winter" class="fixed left-10 md:left-24 top-1/4 floating-avatar-container theme-layer z-20 pointer-events-none w-48 h-64 md:w-64 md:h-80">
+        <!-- Stylized SVG Backpacker (Spring Theme) -->
+        <svg id="avatar-spring" class="floating-avatar absolute inset-0 w-full h-full" viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="30" y="80" width="50" height="90" rx="15" fill="#064e3b" stroke="#10b981" stroke-width="4"/>
+            <rect x="20" y="100" width="20" height="50" rx="8" fill="#10b981"/>
+            <rect x="30" y="175" width="50" height="25" rx="10" fill="#bef264"/>
+            <path d="M75 90 C 75 70, 115 70, 125 90 L 140 180 C 140 190, 70 190, 75 180 Z" fill="#10b981"/>
+            <circle cx="105" cy="50" r="25" fill="#fcd34d"/>
+            <path d="M75 45 Q 105 10 135 45" fill="#022c22" stroke="#10b981" stroke-width="4"/>
+            <rect x="70" y="45" width="70" height="8" rx="4" fill="#022c22"/>
+            <rect x="85" y="180" width="18" height="60" rx="5" fill="#043a2b"/>
+            <rect x="110" y="180" width="18" height="50" rx="5" fill="#043a2b"/>
+            <path d="M80 240 L 105 240 L 105 250 L 75 250 Z" fill="#6b7280"/>
+            <path d="M105 230 L 130 230 L 130 240 L 100 240 Z" fill="#6b7280"/>
+            <rect x="145" y="60" width="6" height="200" rx="3" fill="#d97706" transform="rotate(5 145 60)"/>
+            <path d="M120 100 Q 145 130 142 160" stroke="#043a2b" stroke-width="12" stroke-linecap="round" fill="none"/>
+        </svg>
+
+        <!-- Stylized SVG Backpacker (Winter Puffer Theme) -->
+        <svg id="avatar-winter" class="floating-avatar absolute inset-0 w-full h-full opacity-0" viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="30" y="80" width="50" height="90" rx="15" fill="#334155" stroke="#94a3b8" stroke-width="4"/>
+            <rect x="20" y="100" width="20" height="50" rx="8" fill="#64748b"/>
+            <rect x="30" y="175" width="50" height="25" rx="10" fill="#cbd5e1"/>
+            
+            <!-- Puffer Jacket Body -->
+            <path d="M65 90 C 65 60, 125 60, 135 90 L 150 185 C 150 200, 60 200, 65 185 Z" fill="#2563eb"/>
+            <!-- Puffer Baffles -->
+            <path d="M72 110 L 138 110 M 70 135 L 143 135 M 68 160 L 145 160" stroke="#1e3a8a" stroke-width="3" stroke-linecap="round"/>
+            
+            <!-- Red Scarf -->
+            <path d="M85 85 Q 105 95 125 85 L 120 115 Q 105 105 90 115 Z" fill="#ef4444"/>
+
+            <circle cx="105" cy="50" r="25" fill="#fcd34d"/>
+            
+            <!-- Beanie Hat -->
+            <path d="M75 50 C 75 15, 135 15, 135 50 Z" fill="#0f172a"/>
+            <circle cx="105" cy="20" r="8" fill="#ef4444"/>
+            
+            <!-- Winter Pants & Snow Boots -->
+            <rect x="85" y="180" width="18" height="60" rx="5" fill="#0f172a"/>
+            <rect x="110" y="180" width="18" height="50" rx="5" fill="#0f172a"/>
+            <path d="M80 240 L 105 240 L 105 250 L 75 250 Z" fill="#475569"/>
+            <path d="M105 230 L 130 230 L 130 240 L 100 240 Z" fill="#475569"/>
+            
+            <!-- Ski Pole -->
+            <rect x="145" y="60" width="6" height="200" rx="3" fill="#94a3b8" transform="rotate(5 145 60)"/>
+            <circle cx="140" cy="245" r="8" fill="#cbd5e1" fill-opacity="0.5"/>
+            
+            <!-- Puffer Sleeve -->
+            <path d="M120 100 Q 155 130 142 165" stroke="#1d4ed8" stroke-width="16" stroke-linecap="round" fill="none"/>
+            <path d="M127 125 L 147 140" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+
+    
+    <!-- Stylized Floating Camel with Male Rider -->
+    <div id="avatar-desert" class="fixed left-5 md:left-24 top-1/3 floating-avatar-container theme-layer z-20 pointer-events-none w-64 h-64 md:w-80 md:h-80">
+        <svg class="floating-avatar absolute inset-0 w-full h-full" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            
+            <!-- Rider Body (White Thawb/Robe) -->
+            <path d="M175 140 Q190 115 205 140 L210 190 L170 190 Z" fill="#f8fafc"/> 
+            
+            <!-- Rider Head -->
+            <circle cx="190" cy="115" r="14" fill="#d97706"/> 
+            
+            <!-- Male Beard -->
+            <path d="M182 120 Q190 135 202 122 Q190 128 182 120 Z" fill="#0f172a"/>
+            
+            <!-- Ghutra (Traditional Headscarf) -->
+            <path d="M175 110 C 175 90, 205 90, 205 110 L 210 135 L 200 130 L 195 115 L 185 115 L 180 130 L 170 135 Z" fill="#e2e8f0"/>
+            
+            <!-- Agal (Black cord) -->
+            <path d="M178 105 Q190 100 202 105" stroke="#0f172a" stroke-width="3" fill="none"/>
+            
+            <!-- Camel Body -->
+            <path d="M120 220 C 140 250, 240 250, 260 220 C 260 190, 120 190, 120 220 Z" fill="#b45309"/>
+            <!-- Humps -->
+            <path d="M140 200 C 140 150, 180 150, 190 200 Z" fill="#92400e"/>
+            <path d="M190 200 C 200 140, 240 140, 250 200 Z" fill="#78350f"/>
+            <!-- Neck & Head -->
+            <path d="M250 210 C 290 210, 290 130, 280 120 C 270 110, 310 110, 320 120 C 330 130, 330 150, 300 150 C 290 150, 280 230, 250 230 Z" fill="#b45309"/>
+            
+            <!-- Rider Arm & Reins -->
+            <path d="M190 145 L 210 170 L 235 175" stroke="#cbd5e1" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <path d="M235 175 L 275 155" stroke="#451a03" stroke-width="3" stroke-linecap="round"/> <!-- Reins -->
+            
+            <!-- Legs (Back and Front) -->
+            <path d="M140 235 L 130 320 L 145 320 L 155 235 Z" fill="#78350f"/> <!-- Back Left -->
+            <path d="M160 235 L 155 310 L 170 310 L 175 235 Z" fill="#92400e"/> <!-- Back Right -->
+            <path d="M230 235 L 235 320 L 250 320 L 245 235 Z" fill="#78350f"/> <!-- Front Left -->
+            <path d="M210 235 L 210 310 L 225 310 L 225 235 Z" fill="#92400e"/> <!-- Front Right -->
+
+            <circle cx="305" cy="125" r="3" fill="#0f172a"/> <!-- Eye -->
+        </svg>
+    </div>
+
+    
+    <!-- Stylized Traveler with Camera Avatar -->
+    <div id="avatar-park" class="fixed left-5 md:left-24 top-1/4 floating-avatar-container theme-layer z-20 pointer-events-none w-64 h-64 md:w-80 md:h-80">
+        <svg class="floating-avatar absolute inset-0 w-full h-full" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Backpack -->
+            <path d="M120 120 C 100 120, 90 150, 90 200 C 90 260, 110 270, 140 270 L 140 120 Z" fill="#b45309"/>
+            <path d="M90 150 L 70 160 L 70 230 L 90 240 Z" fill="#78350f"/> 
+            
+            <!-- Torso (Jacket - bright for contrast) -->
+            <path d="M140 110 C 180 100, 240 100, 250 120 L 260 260 L 140 260 Z" fill="#ea580c"/>
+            
+            <!-- Head & Hair -->
+            <circle cx="190" cy="70" r="35" fill="#fcd34d"/> <!-- Face -->
+            <path d="M150 70 C 150 20, 230 20, 230 70 C 230 50, 150 50, 150 70 Z" fill="#1e293b"/> <!-- Hair -->
+            <path d="M185 85 Q 195 100 205 85 Q 195 90 185 85 Z" fill="#1e293b"/> <!-- Beard -->
+            
+            <!-- Legs -->
+            <path d="M150 260 L 145 350 L 175 350 L 180 260 Z" fill="#0f172a"/> 
+            <path d="M210 260 L 225 350 L 195 350 L 190 260 Z" fill="#1e293b"/> 
+            
+            <!-- Boots -->
+            <path d="M140 350 L 180 350 L 185 370 L 135 370 Z" fill="#451a03"/>
+            <path d="M190 350 L 230 350 L 235 370 L 185 370 Z" fill="#290f02"/>
+
+            <!-- Arms & Hands -->
+            <path d="M145 130 Q 160 190 200 180" stroke="#c2410c" stroke-width="25" stroke-linecap="round" fill="none"/> 
+            <path d="M240 130 Q 260 190 220 190" stroke="#f97316" stroke-width="28" stroke-linecap="round" fill="none"/> 
+            <circle cx="205" cy="180" r="12" fill="#fcd34d"/> 
+            <circle cx="215" cy="190" r="14" fill="#fcd34d"/> 
+
+            <!-- Camera -->
+            <rect x="210" y="150" width="50" height="35" rx="5" fill="#334155"/> 
+            <circle cx="245" cy="167" r="18" fill="#1e293b"/> 
+            <circle cx="245" cy="167" r="12" fill="#38bdf8"/> 
+            <circle cx="240" cy="162" r="4" fill="#fff" opacity="0.8"/> 
+            <path d="M190 70 Q 260 90 240 150" stroke="#1e293b" stroke-width="4" fill="none" stroke-dasharray="8 4"/> 
+        </svg>
+    </div>
+
+    
+    <!-- Stylized Traveler with Glowing Lantern -->
+    <div id="avatar-twilight" class="fixed left-5 md:left-24 top-1/4 floating-avatar-container theme-layer z-20 pointer-events-none w-64 h-64 md:w-80 md:h-80">
+        <svg class="floating-avatar absolute inset-0 w-full h-full" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            
+            <!-- Lantern Glow -->
+            <circle cx="280" cy="180" r="50" fill="#fde047" opacity="0.15" filter="blur(10px)"/>
+            <circle cx="280" cy="180" r="25" fill="#fde047" opacity="0.3" filter="blur(5px)"/>
+            
+            <!-- Torso (Jacket) -->
+            <path d="M140 120 C 180 110, 240 110, 250 130 L 260 270 L 140 270 Z" fill="#334155"/>
+            <path d="M160 125 L 160 270" stroke="#1e293b" stroke-width="4"/> <!-- Zipper line -->
+
+            <!-- Head & Hair (Looking forward/up) -->
+            <circle cx="195" cy="80" r="35" fill="#d97706"/> <!-- Face -->
+            <path d="M160 80 C 160 30, 230 30, 240 80 C 240 60, 160 60, 160 80 Z" fill="#0f172a"/> <!-- Hair -->
+            <path d="M190 95 Q 200 110 215 95 Q 205 100 190 95 Z" fill="#0f172a"/> <!-- Beard -->
+
+            <!-- Backpack -->
+            <path d="M120 130 C 100 130, 90 160, 90 210 C 90 270, 110 280, 140 280 L 140 130 Z" fill="#1e293b"/>
+            
+            <!-- Legs -->
+            <path d="M150 270 L 145 360 L 175 360 L 180 270 Z" fill="#0f172a"/> 
+            <path d="M210 270 L 225 360 L 195 360 L 190 270 Z" fill="#1e293b"/> 
+            
+            <!-- Boots -->
+            <path d="M140 360 L 180 360 L 185 380 L 135 380 Z" fill="#020617"/>
+            <path d="M190 360 L 230 360 L 235 380 L 185 380 Z" fill="#020617"/>
+
+            <!-- Arm holding Lantern -->
+            <path d="M145 140 Q 160 200 200 190" stroke="#475569" stroke-width="25" stroke-linecap="round" fill="none"/> <!-- Back arm -->
+            <path d="M240 140 Q 270 170 280 160" stroke="#475569" stroke-width="25" stroke-linecap="round" fill="none"/> <!-- Front Arm -->
+            
+            <!-- Lantern -->
+            <rect x="270" y="165" width="20" height="30" rx="3" fill="#1e293b"/>
+            <rect x="274" y="170" width="12" height="20" rx="2" fill="#fde047"/>
+            <path d="M270 165 L 280 155 L 290 165" stroke="#0f172a" stroke-width="3" fill="none"/> <!-- Lantern Handle -->
+            
+            <!-- Face features looking up -->
+            <circle cx="215" cy="75" r="3" fill="#0f172a"/> 
+        </svg>
+    </div>
+
+    
+
+    <!-- ===================== NAVIGATION UI ===================== -->
+    <div class="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-50 pointer-events-none">
+        <div id="session-header" class="text-sm tracking-widest font-semibold uppercase hidden md:block transition-colors duration-500">
+            Huzaifah Adam | Session 1: The Catalyst
+        </div>
+        <div id="slide-counter-pill" class="flex items-center gap-2 bg-black/30 px-4 py-2 rounded-full backdrop-blur-sm border border-white/20 transition-colors duration-500">
+            <span id="current-slide-num" class="font-bold transition-colors duration-500">1</span>
+            <span id="total-slide-num" class="text-gray-400 transition-colors duration-500">/ 25</span>
+        </div>
+    </div>
+
+    <div id="progress-track" class="fixed bottom-0 left-0 w-full h-1 bg-black/50 z-50 transition-colors duration-500">
+        <div id="progress-bar" class="h-full transition-all duration-300" style="width: 4%; background-color:#bef264;"></div>
+    </div>
+
+    <div class="fixed bottom-6 right-6 z-50 flex gap-4">
+        <button id="prev-btn" class="p-3 rounded-full transition-colors pointer-events-auto backdrop-blur duration-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button id="next-btn" class="p-3 rounded-full transition-all pointer-events-auto backdrop-blur duration-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+    </div>
+
+    <div id="presentation-container" class="relative w-full h-screen">
+
+        <!-- SLIDE 1: Title Hook -->
+        <section class="slide theme-spring active">
+            <div class="content-container h-full items-center">
+                <div class="text-content text-left md:text-right gsap-reveal">
+                    <span class="inline-block py-1.5 px-4 rounded-full bg-brand-primary/20 text-brand-accent text-sm font-semibold tracking-widest uppercase mb-6 border border-brand-primary/50 backdrop-blur-sm shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                        School of Graduate Studies UTM
+                    </span>
+                    <h1 class="text-5xl md:text-8xl font-bold mb-4 leading-tight text-white font-serif tracking-tight drop-shadow-lg">
+                        The Rational Pivot
+                    </h1>
+                    <h2 class="text-2xl md:text-3xl text-brand-primary font-light mb-12">
+                        Stop Romanticizing the Goal, <br/><span class="text-brand-text font-semibold">Start Maximizing the Toolkit.</span>
+                    </h2>
+                    
+                    <div class="flex flex-col md:items-end gap-2">
+                        <div class="glass-card p-6 inline-block text-left md:text-right border-brand-accent/30 bg-black/20">
+                            <p class="text-2xl font-bold text-white mb-1">Muhd Huzaifah Adam</p>
+                            <p class="text-brand-accent font-medium tracking-wide">Performance Analyst, Bank Simpanan Nasional</p>
+                            <div class="w-full h-px bg-gradient-to-r from-transparent to-brand-primary/50 my-3 hidden md:block"></div>
+                            <div class="w-full h-px bg-gradient-to-l from-transparent to-brand-primary/50 my-3 md:hidden"></div>
+                            <p class="text-sm text-brand-text/80 italic">MSc Developmental Psychology, GMBPsS</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 2 -->
+        <section class="slide theme-spring">
+            <div class="content-container h-full flex flex-col justify-center">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <h2 class="text-sm text-brand-accent font-bold tracking-widest uppercase mb-2">Session 1</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-6 text-white font-serif drop-shadow-md">Beyond the Paper <br/><span class="text-2xl md:text-3xl text-brand-primary font-sans font-light">(The Unwritten Journey)</span></h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                        <!-- Formal / Paper Trail -->
+                        <div class="glass-card p-6 md:p-8 gsap-reveal hover:bg-white/10 transition-colors timeline-scroll">
+                            <h3 class="text-xl md:text-2xl font-serif text-brand-accent mb-6 flex items-center gap-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                The Paper Trail
+                            </h3>
+                            <!-- Timeline Structure -->
+                            <div class="relative border-l-2 border-brand-primary/40 ml-3 space-y-8 pb-4">
+                                <div class="relative pl-6">
+                                    <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-primary transition-transform hover:scale-125"></div>
+                                    <h4 class="text-brand-primary font-semibold text-lg">BSc Psychology & HRD</h4>
+                                    <p class="text-brand-text/80 text-sm">Universiti Teknologi Malaysia</p>
+                                </div>
+                                <div class="relative pl-6">
+                                    <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-primary transition-transform hover:scale-125"></div>
+                                    <h4 class="text-brand-primary font-semibold text-lg">MSc Developmental Psychology</h4>
+                                    <p class="text-brand-text/80 text-sm">Lancaster University</p>
+                                </div>
+                                <div class="relative pl-6">
+                                    <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-primary transition-transform hover:scale-125"></div>
+                                    <h4 class="text-brand-primary font-semibold text-lg">Analyst</h4>
+                                    <p class="text-brand-text/80 text-sm">Khazanah Nasional Berhad</p>
+                                </div>
+                                <div class="relative pl-6">
+                                    <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-brand-accent border-2 border-brand-primary shadow-[0_0_15px_rgba(190,242,100,0.4)] transition-transform hover:scale-125"></div>
+                                    <h4 class="text-brand-accent font-semibold text-lg">Performance Analyst</h4>
+                                    <p class="text-brand-text/80 text-sm">Bank Simpanan Nasional</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reality / The Unwritten Journey -->
+                        <div class="glass-card p-6 md:p-8 bg-brand-primary/5 border-brand-accent/30 gsap-reveal shadow-[inset_0_0_30px_rgba(190,242,100,0.05)] timeline-scroll">
+                            <h3 class="text-xl md:text-2xl font-serif text-brand-accent mb-6 flex items-center gap-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                The Unwritten Journey
+                            </h3>
+                            
+                            <!-- Internal Timeline Structure -->
+                            <div class="relative border-l-2 border-dashed border-brand-accent/40 ml-3 space-y-5 pb-2">
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-accent group-hover:bg-brand-accent transition-colors"></div>
+                                    <p class="text-white text-sm font-semibold">Forced to be in uni</p>
+                                    <p class="text-brand-muted text-xs italic mt-0.5 leading-relaxed">"Refused to go to uni initially because I wanted to work in an arcade."</p>
+                                </div>
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-accent group-hover:bg-brand-accent transition-colors"></div>
+                                    <p class="text-white text-sm font-semibold">Fixed mindset & Imposter Syndrome</p>
+                                    <p class="text-brand-muted text-xs italic mt-0.5 leading-relaxed">"Obsessed with getting people's attention; wanted to be seen as the 'effortless genius'."</p>
+                                </div>
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-accent group-hover:bg-brand-accent transition-colors"></div>
+                                    <p class="text-white text-sm font-semibold">The Narrow Vision</p>
+                                    <p class="text-brand-muted text-xs italic mt-0.5 leading-relaxed">"Plotted my life to be a clinical psychologist because all other psychologists were 'not cool'."</p>
+                                </div>
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-accent group-hover:bg-brand-accent transition-colors"></div>
+                                    <p class="text-white text-sm font-semibold">Career vs. Journey</p>
+                                    <p class="text-brand-muted text-xs italic mt-0.5 leading-relaxed">"Stay and become a clinical psych, or choose a different route where you can actually enjoy them."</p>
+                                </div>
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-accent group-hover:bg-brand-accent transition-colors"></div>
+                                    <p class="text-white text-sm font-semibold">Taking things too easily</p>
+                                    <p class="text-brand-muted text-xs italic mt-0.5 leading-relaxed">"Skipped classes, did my assignments at hostels in many different countries."</p>
+                                </div>
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-accent group-hover:bg-brand-accent transition-colors"></div>
+                                    <p class="text-white text-sm font-semibold">Running from reality</p>
+                                    <p class="text-brand-muted text-xs italic mt-0.5 leading-relaxed">"Travel, travel, travel, and travel."</p>
+                                </div>
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-accent group-hover:bg-brand-accent transition-colors"></div>
+                                    <p class="text-white text-sm font-semibold">The Ultimatum</p>
+                                    <p class="text-brand-muted text-xs italic mt-0.5 leading-relaxed">"Forced to make a life-changing decision: to stay as cheap labour abroad or go home and redeem myself."</p>
+                                </div>
+                                <div class="relative pl-6 group">
+                                    <div class="absolute -left-[9px] top-1.5 w-4 h-4 rounded-full bg-brand-darkest border-2 border-brand-accent shadow-[0_0_10px_rgba(190,242,100,0.8)] group-hover:bg-brand-accent transition-colors"></div>
+                                    <p class="text-brand-accent text-sm font-semibold">The Rational Pivot</p>
+                                    <p class="text-brand-text/90 text-xs italic mt-0.5 leading-relaxed">"Someone that understands life better and chooses not to romanticize it anymore. Life is when opportunity meets preparation."</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 3 -->
+        <section class="slide theme-spring">
+            <div class="content-container h-full flex flex-col justify-center pl-0 md:pl-12">
+                <div class="text-content w-full self-end">
+                    <h2 class="text-sm text-brand-accent font-bold tracking-widest uppercase mb-4 gsap-reveal">The Catalyst</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold mb-6 text-white font-serif drop-shadow-md gsap-reveal">30 Countries. 80% Solo.<br/><span class="text-xl md:text-3xl text-brand-primary font-sans font-light">How the world reshaped my window of view.</span></h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start mt-8">
+                        <div class="space-y-6 gsap-reveal timeline-scroll pr-2">
+                            <div class="glass-card p-5 border-brand-primary/30 bg-black/30 hover:bg-black/50 transition-colors">
+                                <h3 class="text-brand-primary font-semibold mb-3 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> Perception vs. Reality</h3>
+                                <ul class="text-sm text-brand-text/90 space-y-2 list-none">
+                                    <li><span class="text-brand-accent font-bold mr-2">1.1</span>Travel is about changing perception (media vs. reality).</li>
+                                    <li><span class="text-brand-accent font-bold mr-2">1.2</span>Media is not the reality, then what’s the actual reality?</li>
+                                    <li><span class="text-brand-accent font-bold mr-2">1.3</span>What I understand about reality (if the reality that I built up all this while is through media).</li>
+                                    <li><span class="text-brand-accent font-bold mr-2">1.4</span>Which reality do I want to choose? Mine or theirs? Which one is right?</li>
+                                </ul>
+                            </div>
+                            <div class="glass-card p-5 border-brand-accent/30 bg-black/30 hover:bg-black/50 transition-colors">
+                                <h3 class="text-brand-accent font-semibold mb-3 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> The Anonymous Traveler</h3>
+                                <ul class="text-sm text-brand-text/90 space-y-2 list-none">
+                                    <li><span class="text-brand-primary font-bold mr-2">2.1</span>Travel is about understanding the present and the long journey.</li>
+                                    <li><span class="text-brand-primary font-bold mr-2">2.2</span>Travel is about being anonymous where no one knew me.</li>
+                                    <li><span class="text-brand-primary font-bold mr-2">2.3</span>Travel allowed me to rebrand myself and my persona.</li>
+                                    <li><span class="text-brand-primary font-bold mr-2">2.4</span>Travel is when I can shape my story and rebrand my history.</li>
+                                    <li><span class="text-brand-primary font-bold mr-2">2.5</span>Travel is when I can choose my reality.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="glass-card p-6 md:p-8 bg-brand-primary/10 border-brand-accent/50 shadow-[0_0_25px_rgba(16,185,129,0.15)] gsap-reveal relative overflow-hidden">
+                            <svg class="absolute -bottom-10 -right-10 w-48 h-48 text-brand-primary/10 rotate-12 pointer-events-none" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z" clip-rule="evenodd"></path></svg>
+                            
+                            <p class="text-brand-text italic mb-6 text-sm md:text-base leading-relaxed border-l-2 border-brand-primary pl-4 relative z-10">
+                                "To conclude, when I traveled by myself, I did a lot of self-reflection about life and what I want to do. I didn't do anything on the bus or on the train—it makes me question things..."
+                            </p>
+                            
+                            <h3 class="text-xl md:text-2xl font-serif text-white mb-5 relative z-10">The Bosnian Reflections:</h3>
+                            <div class="space-y-3 relative z-10">
+                                <div class="bg-black/50 p-3 rounded-lg border border-brand-accent/30 text-brand-accent font-medium backdrop-blur-sm transition-transform hover:scale-105 cursor-default">1. Why do I have to stay in the academia route?</div>
+                                <div class="bg-black/50 p-3 rounded-lg border border-brand-accent/30 text-brand-accent font-medium backdrop-blur-sm transition-transform hover:scale-105 cursor-default">2. What do I want to achieve in this route?</div>
+                                <div class="bg-black/50 p-3 rounded-lg border border-brand-accent/30 text-brand-accent font-medium backdrop-blur-sm transition-transform hover:scale-105 cursor-default">3. What's my life target?</div>
+                                <div class="bg-black/50 p-3 rounded-lg border border-brand-accent/30 text-brand-accent font-medium backdrop-blur-sm transition-transform hover:scale-105 cursor-default">4. What's the foundation that I have?</div>
+                                <div class="bg-black/50 p-3 rounded-lg border border-brand-accent/30 text-brand-accent font-medium backdrop-blur-sm transition-transform hover:scale-105 cursor-default">5. Who do I want to be?</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4 -->
+        <section class="slide theme-spring">
+            <div class="content-container h-full flex flex-col justify-center pl-0 md:pl-12">
+                <div class="text-content w-full self-end">
+                    <h2 class="text-sm text-brand-accent font-bold tracking-widest uppercase mb-12 text-center md:text-left gsap-reveal">The Turning Point</h2>
+                    
+                    <div class="space-y-12">
+                        <div class="gsap-reveal bg-gradient-to-r from-transparent via-brand-primary/5 to-transparent md:via-transparent md:to-brand-primary/5 p-6 md:p-8 rounded-2xl md:border-r-4 md:border-brand-primary">
+                            <p class="font-serif text-2xl md:text-4xl text-white italic mb-6 leading-relaxed relative">
+                                <span class="absolute -top-6 -left-8 text-6xl text-brand-primary/40">"</span>
+                                Luck is what happens when preparation meets opportunity.
+                            </p>
+                            <p class="text-brand-accent font-bold tracking-widest uppercase text-sm mb-4">— Seneca, Roman Philosopher</p>
+                            <div class="bg-black/30 p-5 rounded-xl border border-white/10 shadow-inner">
+                                <p class="text-brand-text/90 text-sm md:text-base leading-relaxed">
+                                    The questions I asked myself in Bosnia led to a profound realization: academia was my <span class="text-brand-accent font-semibold">preparation</span>, not my final destination. The rational pivot meant building an adaptable toolkit. When the opportunity appeared, I didn't stumble into it—I was prepared for it.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="gsap-reveal bg-gradient-to-r from-transparent via-brand-accent/5 to-transparent md:via-transparent md:to-brand-accent/5 p-6 md:p-8 rounded-2xl md:border-r-4 md:border-brand-accent">
+                            <p class="font-serif text-2xl md:text-4xl text-brand-accent italic mb-2 leading-relaxed relative">
+                                <span class="absolute -top-6 -left-8 text-6xl text-brand-accent/30 font-sans">"</span>
+                                Toi, tu auras des étoiles comme personne n'en a.
+                            </p>
+                            <p class="text-brand-text/60 text-base italic mb-6">(You, you will have stars like no one else has)</p>
+                            <p class="text-brand-primary font-bold tracking-widest uppercase text-sm mb-4">— The Little Prince</p>
+                            <div class="bg-black/30 p-5 rounded-xl border border-white/10 shadow-inner">
+                                <p class="text-brand-text/90 text-sm md:text-base leading-relaxed">
+                                    Academia often pressures us to chase one specific, highly romanticized star. But stepping off the linear path isn't a failure—it's defining a constellation entirely your own. By choosing my own reality, I forged a path that bridged behavioral science directly with real-world impact.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 5: SESSION 2 OPENER (WINTER THEME) -->
+        <section class="slide theme-winter">
+            <div class="content-container h-full items-center">
+                <div class="text-content text-left md:text-right gsap-reveal">
+                    <span class="inline-block py-1.5 px-4 rounded-full bg-blue-500/20 text-blue-200 text-sm font-semibold tracking-widest uppercase mb-6 border border-blue-400/50 backdrop-blur-sm shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                        Session 2
+                    </span>
+                    <h1 class="text-5xl md:text-7xl font-bold mb-4 leading-tight text-white font-serif tracking-tight drop-shadow-lg">
+                        The Rational Pivot
+                    </h1>
+                    <h2 class="text-2xl md:text-3xl text-blue-300 font-light mb-12">
+                        Four Paths, <span class="text-white font-semibold">One Realization.</span>
+                    </h2>
+                    
+                    <div class="flex flex-col md:items-end gap-6 mt-12">
+                        <p class="text-xl text-slate-300 max-w-lg italic md:border-r-4 border-blue-400 md:pr-4">
+                            "Shattering the illusion of the linear track. A postgraduate degree isn't a railroad—it’s a crucible for building an adaptable toolkit."
+                        </p>
+                        
+                        <div class="grid grid-cols-2 gap-4 mt-6 w-full md:w-auto">
+                            <div class="bg-black/40 backdrop-blur-md border border-slate-600 p-4 rounded-lg text-center shadow-xl">
+                                <span class="text-blue-200 font-bold block mb-1">The Global Nomad</span>
+                                <span class="text-xs text-slate-400">Post-Doc to Finland</span>
+                            </div>
+                            <div class="bg-black/40 backdrop-blur-md border border-slate-600 p-4 rounded-lg text-center shadow-xl">
+                                <span class="text-blue-200 font-bold block mb-1">The Diplomat</span>
+                                <span class="text-xs text-slate-400">Academia to Embassy</span>
+                            </div>
+                            <div class="bg-black/40 backdrop-blur-md border border-slate-600 p-4 rounded-lg text-center shadow-xl">
+                                <span class="text-blue-200 font-bold block mb-1">The Traditionalist</span>
+                                <span class="text-xs text-slate-400">MD to Lecturer</span>
+                            </div>
+                            <div class="bg-black/40 backdrop-blur-md border border-blue-500/30 p-4 rounded-lg text-center shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                                <span class="text-white font-bold block mb-1">The Curveball</span>
+                                <span class="text-xs text-blue-200">PhD to Tent Business</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6: The Illusion (Winter Theme) -->
+        <section class="slide theme-winter">
+            <div class="content-container h-full items-start pt-28 md:pt-40">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <h2 class="text-sm text-blue-300 font-bold tracking-widest uppercase mb-4">The Illusion</h2>
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6 text-white font-serif drop-shadow-md">The Linear Track is a <span class="text-blue-400 font-sans italic font-light">Myth.</span></h1>
+                    <p class="text-lg text-slate-300 mb-8 max-w-2xl">
+                        Academia conditions us to believe that if you don't become a tenured professor in your exact niche, you've failed. It's time to stop romanticizing the end goal.
+                    </p>
+                    
+                    <!-- SVG Branching Path -->
+                    <div class="w-full h-48 md:h-64 relative border border-blue-500/30 rounded-xl bg-black/40 mt-8 overflow-hidden backdrop-blur-sm shadow-[0_0_20px_rgba(59,130,246,0.15)]">
+                        <svg class="w-full h-full" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid meet">
+                            <!-- Base Linear Path -->
+                            <path class="branch-line base-line" d="M 50 100 L 350 100" fill="none" stroke="#64748b" stroke-width="4" stroke-dasharray="300" stroke-dashoffset="300"/>
+                            
+                            <!-- Branch 1 (Up) -->
+                            <path class="branch-line branch" d="M 350 100 C 450 100, 450 40, 750 40" fill="none" stroke="#60a5fa" stroke-width="4" stroke-dasharray="500" stroke-dashoffset="500"/>
+                            <!-- Branch 2 (Straight) -->
+                            <path class="branch-line branch" d="M 350 100 L 750 100" fill="none" stroke="#818cf8" stroke-width="4" stroke-dasharray="400" stroke-dashoffset="400"/>
+                            <!-- Branch 3 (Down) -->
+                            <path class="branch-line branch" d="M 350 100 C 450 100, 450 160, 750 160" fill="none" stroke="#38bdf8" stroke-width="4" stroke-dasharray="500" stroke-dashoffset="500"/>
+                            
+                            <!-- Nodes -->
+                            <circle cx="50" cy="100" r="8" fill="#fff" class="node base-node opacity-0" />
+                            <circle cx="350" cy="100" r="8" fill="#fff" class="node base-node opacity-0" />
+                            <circle cx="750" cy="40" r="8" fill="#60a5fa" class="node branch-node opacity-0" />
+                            <circle cx="750" cy="100" r="8" fill="#818cf8" class="node branch-node opacity-0" />
+                            <circle cx="750" cy="160" r="8" fill="#38bdf8" class="node branch-node opacity-0" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 7: The Radical Pivots -->
+        <section class="slide theme-winter">
+            <div class="content-container h-full items-start pt-20 md:pt-32">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <h2 class="text-sm text-blue-300 font-bold tracking-widest uppercase mb-2">The Radical Pivots</h2>
+                    <h1 class="text-3xl md:text-5xl font-bold mb-6 text-white font-serif drop-shadow-md">When Preparation <span class="text-blue-400 font-sans italic font-light">Meets Reality.</span></h1>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5 items-stretch">
+                        <!-- Card 1: Sister (Engineering to Tent) -->
+                        <div class="flip-card h-[16rem] md:h-[17rem]">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-card glass-card-winter border border-blue-400/30 p-4 group">
+                                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-blue-500/20 border-2 border-blue-400/50 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-transform group-hover:scale-110">
+                                        <!-- Tent Icon -->
+                                        <svg class="w-8 h-8 md:w-10 md:h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21h18M12 3l9 18H3L12 3zm0 0v18"></path></svg>
+                                    </div>
+                                    <h3 class="text-lg md:text-xl font-bold text-white mb-1">The Curveball</h3>
+                                    <p class="text-blue-200 text-xs md:text-sm">BSc, MSc, PhD in Engineering</p>
+                                    <p class="text-xs text-slate-400 mt-2 animate-pulse">Hover to reveal &rarr;</p>
+                                </div>
+                                <div class="flip-card-back glass-card bg-blue-900/40 border border-blue-500/50 p-4">
+                                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Tent Business Owner</h3>
+                                    <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                        Her PhD didn't trap her in a lab. It taught her advanced project management, complex logistics, and resilience&mdash;skills needed to build and scale a business.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Sister 2 (MD to Lecturer) -->
+                        <div class="flip-card h-[16rem] md:h-[17rem]">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-card glass-card-winter border border-blue-400/30 p-4 group">
+                                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-blue-500/20 border-2 border-blue-400/50 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-transform group-hover:scale-110">
+                                        <!-- Health / Heart Icon -->
+                                        <svg class="w-8 h-8 md:w-10 md:h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                                    </div>
+                                    <h3 class="text-lg md:text-xl font-bold text-white mb-1">The Traditionalist</h3>
+                                    <p class="text-blue-200 text-xs md:text-sm">Medical Doctor, PhD Physiology</p>
+                                    <p class="text-xs text-slate-400 mt-2 animate-pulse">Hover to reveal &rarr;</p>
+                                </div>
+                                <div class="flip-card-back glass-card bg-blue-900/40 border border-blue-500/50 p-4">
+                                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Lecturer @ UPNM</h3>
+                                    <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                        The traditional academic path exists, but it requires relentless dedication, adapting from the practical front-lines of medicine into deep academic research.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: BIL (Lecturer to Diplomat) -->
+                        <div class="flip-card h-[16rem] md:h-[17rem]">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-card glass-card-winter border border-blue-400/30 p-4 group">
+                                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-blue-500/20 border-2 border-blue-400/50 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-transform group-hover:scale-110">
+                                        <!-- Briefcase Icon -->
+                                        <svg class="w-8 h-8 md:w-10 md:h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <h3 class="text-lg md:text-xl font-bold text-white mb-1">The Diplomatic Shift</h3>
+                                    <p class="text-blue-200 text-xs md:text-sm">MSc, Part-time Lecturer, PhD</p>
+                                    <p class="text-xs text-slate-400 mt-2 animate-pulse">Hover to reveal &rarr;</p>
+                                </div>
+                                <div class="flip-card-back glass-card bg-blue-900/40 border border-blue-500/50 p-4">
+                                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Embassy of Korea</h3>
+                                    <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                        The analytical rigor, cross-cultural understanding, and elite communication skills forged during his academic journey translated perfectly into international relations.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Friend (Nomad) -->
+                        <div class="flip-card h-[16rem] md:h-[17rem]">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front glass-card glass-card-winter border border-blue-400/30 p-4 group">
+                                    <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-blue-500/20 border-2 border-blue-400/50 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-transform group-hover:scale-110">
+                                        <!-- Globe / Explorer Icon -->
+                                        <svg class="w-8 h-8 md:w-10 md:h-10 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <h3 class="text-lg md:text-xl font-bold text-white mb-1">The Global Explorer</h3>
+                                    <p class="text-blue-200 text-xs md:text-sm">BSc, MSc, PhD, Post-Doc (NUS)</p>
+                                    <p class="text-xs text-slate-400 mt-2 animate-pulse">Hover to reveal &rarr;</p>
+                                </div>
+                                <div class="flip-card-back glass-card bg-blue-900/40 border border-blue-500/50 p-4">
+                                    <h3 class="text-lg md:text-xl font-bold text-white mb-2">Researcher in Finland</h3>
+                                    <p class="text-slate-300 text-xs md:text-sm leading-relaxed">
+                                        Academia isn't always stationary. Her degrees acted as a global passport, proving that the rational path often requires embracing relentless mobility.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 8: The Reality Check (My Pivot) -->
+        <section class="slide theme-winter">
+            <div class="content-container h-full items-start pt-24 md:pt-32">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <h2 class="text-sm text-blue-300 font-bold tracking-widest uppercase mb-4">My Own Pivot</h2>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-8 text-white font-serif drop-shadow-md">The Reality Check: <br/><span class="text-2xl md:text-4xl text-blue-400 font-sans font-light">From Clinical Dreams to Corporate Leaps.</span></h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <!-- Card 1: The Narrow View -->
+                        <div class="glass-card glass-card-winter p-6 border-t-4 border-t-blue-400 hover:bg-white/5 transition-colors flex flex-col">
+                            <div class="bg-blue-500/20 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">The Narrow View</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed">
+                                Planned to be a clinical psychologist. Master's research (EEG data) revealed a hard truth: <strong class="text-blue-300 font-semibold">my true forte is numbers and methodology</strong>, not immense clinical patience.
+                            </p>
+                        </div>
+
+                        <!-- Card 2: The Stagnation -->
+                        <div class="glass-card glass-card-winter p-6 border-t-4 border-t-blue-400 hover:bg-white/5 transition-colors flex flex-col">
+                            <div class="bg-blue-500/20 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">The Stagnation</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed">
+                                Pursued an MSc expecting career advancement. Reality hit hard: <strong class="text-blue-300 font-semibold">my role barely changed and pay remained low</strong>. The promised academic reward didn't align with industry reality.
+                            </p>
+                        </div>
+
+                        <!-- Card 3: The Khazanah Leap -->
+                        <div class="glass-card glass-card-winter p-6 bg-blue-900/30 border-t-4 border-t-blue-300 shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:bg-blue-800/40 transition-colors flex flex-col">
+                            <div class="bg-blue-400/20 w-12 h-12 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">The Khazanah Leap</h3>
+                            <p class="text-slate-300 text-sm leading-relaxed">
+                                Applied out of the blue and was <strong class="text-blue-300 font-semibold">selected in the top 25 of 4,000 applicants</strong>. The corporate sector allowed me to apply my analytical toolkit on a massive scale.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 9: Heart & Brain -->
+        <section class="slide theme-winter">
+            <div class="content-container h-full items-start pt-20 md:pt-32 justify-center pl-0">
+                <div class="text-content w-full gsap-reveal flex flex-col justify-center">
+                    <h2 class="text-sm text-blue-300 font-bold tracking-widest uppercase mb-4 md:mb-6">The Philosophy</h2>
+                    
+                    <h1 class="text-4xl md:text-6xl font-black mb-8 leading-tight tracking-tighter text-white font-serif">
+                        <span class="block text-2xl md:text-4xl text-slate-300 font-light font-sans tracking-normal italic mb-2">"I follow my brain in rationalising my decision,</span>
+                        <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-blue-100 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">But I bring my heart with me."</span>
+                    </h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                        <div class="md:col-span-2 glass-card glass-card-winter p-6 md:p-8 border-t-4 border-t-blue-400">
+                            <p class="text-base md:text-lg text-slate-200 leading-relaxed mb-6">
+                                I never lost touch with psychology. I apply it daily. It may not always be on paper or through formal journal reviews, but it lives in the conversations I have, the analytical frameworks I build, and the small decisions I make every day.
+                            </p>
+                            
+                            <div class="bg-black/40 rounded-xl p-5 border border-slate-600/50">
+                                <h4 class="text-blue-300 font-bold mb-2 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    Beyond the Corporate Office
+                                </h4>
+                                <p class="text-sm text-slate-300 leading-relaxed">
+                                    Recently, I traveled to meet the indigenous Bateq Negrito community. I spent 3 days learning their language and teaching them Bahasa Malaysia. Experiences like this prove that the essence of social science—understanding and connecting with humans—is a lifelong toolkit, no matter where your rational career takes you.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="hidden md:flex flex-col justify-center items-center glass-card glass-card-winter p-6 border border-blue-400/20 bg-blue-900/10 shadow-inner">
+                            <svg class="w-24 h-24 text-blue-400/80 mb-6 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                            <div class="w-12 h-1 bg-blue-500/50 mb-4 rounded-full"></div>
+                            <p class="text-center text-sm font-bold text-white uppercase tracking-widest leading-relaxed">
+                                The Toolkit <br/><span class="text-blue-300">is Everywhere.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 10: The Rational Takeaway -->
+        <section class="slide theme-winter">
+            <div class="content-container h-full items-start pt-32 md:pt-48 justify-center pl-0">
+                <div class="text-content w-full gsap-reveal flex flex-col justify-center items-center text-center">
+                    <h2 class="text-sm text-blue-300 font-bold tracking-widest uppercase mb-4">The Rational Takeaway</h2>
+                    
+                    <h1 class="text-5xl md:text-7xl font-black mb-8 leading-tight text-white font-serif tracking-tight drop-shadow-lg">
+                        Maximize <br/> The Toolkit.
+                    </h1>
+                    
+                    <div class="glass-card glass-card-winter p-6 md:p-10 max-w-2xl border-blue-400/40 bg-black/40 backdrop-blur-md shadow-[0_0_30px_rgba(59,130,246,0.2)]">
+                        <p class="text-lg md:text-xl text-slate-200 mb-6 font-medium">
+                            Stop romanticising a single job title. Be rational about your skills. Ask yourself:
+                        </p>
+                        
+                        <p class="text-xl md:text-2xl text-blue-300 font-serif italic leading-relaxed">
+                            "Where is industry losing efficiency because they lack the deep analytical and human-centric reasoning I possess?"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 11: Session Title -->
+        <section class="slide theme-desert">
+            <div class="content-container h-full items-center justify-center w-full max-w-full">
+                <div class="text-content text-center gsap-reveal flex flex-col items-center">
+                    <span class="inline-block py-1.5 px-5 rounded-full bg-desert-primary/20 text-desert-accent text-sm font-bold tracking-widest uppercase mb-6 border border-desert-primary/50 backdrop-blur-sm">
+                        Session 3
+                    </span>
+                    <h1 class="text-5xl md:text-7xl font-bold mb-4 leading-tight text-white font-serif drop-shadow-lg">
+                        The Industry Reality
+                    </h1>
+                    <h2 class="text-2xl md:text-4xl text-desert-primary font-light mb-8 font-sans">
+                        BSN & Khazanah
+                    </h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 12: Stakeholders & Inferiority -->
+        <section class="slide theme-desert">
+            <div class="content-container h-full items-center">
+                <div class="text-content text-left md:text-right gsap-reveal">
+                    <span class="inline-block py-1.5 px-4 rounded-full bg-desert-primary/20 text-desert-accent text-xs font-bold tracking-widest uppercase mb-4 border border-desert-primary/50 backdrop-blur-sm">
+                        Slide 11
+                    </span>
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight text-white font-serif drop-shadow-lg">
+                        The Imposter at the <br/> Stakeholder Table
+                    </h1>
+                    <h2 class="text-xl md:text-2xl text-desert-primary font-light mb-8">
+                        The shock of <span class="text-white font-semibold">translating theory to ROI.</span>
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 md:text-left text-sm md:text-base">
+                        <div class="glass-card p-6 border-t-4 border-desert-primary">
+                            <h3 class="text-desert-accent font-bold mb-3 text-lg flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                The Language Barrier
+                            </h3>
+                            <p class="text-desert-text/90 leading-relaxed mb-4">
+                                Shifting from academia to high-stakes strategy means sitting with financial heavyweights and seasoned executives. You speak psychology and human behavior; they speak valuation and financial impact.
+                            </p>
+                            <p class="text-desert-muted italic text-sm border-l-2 border-desert-muted pl-3">
+                                "Stakeholders don't care about the beauty of the theory; they care about the tangible outcome."
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-6 border-t-4 border-desert-accent bg-black/20">
+                            <h3 class="text-white font-bold mb-3 text-lg flex items-center gap-2">
+                                <svg class="w-5 h-5 text-desert-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Profound Inferiority
+                            </h3>
+                            <p class="text-desert-text/90 leading-relaxed mb-4">
+                                The imposter syndrome is crushing. You realize that to justify organizational change, you have to learn their language rapidly. It’s why I upskilled in Financial Modeling—just to defend my analytical models.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 13: The Grind & Plateau -->
+        <section class="slide theme-desert">
+            <div class="content-container h-full flex flex-col justify-center pl-0 md:pl-12">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <span class="inline-block py-1 px-3 rounded text-desert-accent text-xs font-bold tracking-widest uppercase mb-3 bg-black/50 border border-desert-accent/30">
+                        Slide 12
+                    </span>
+                    <h1 class="text-3xl md:text-5xl font-bold mb-6 text-white font-serif">
+                        The Midnight Grind <br/>
+                        <span class="text-xl md:text-3xl text-desert-primary font-sans font-light">& The Fast Plateau.</span>
+                    </h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch mt-6">
+                        <div class="space-y-4">
+                            <p class="text-base text-desert-text/90 leading-relaxed">
+                                The 12-hour days aren't just a corporate myth. But the real danger isn't the hours; it's how quickly you hit a ceiling when doing routine operational tasks.
+                            </p>
+                            
+                            <div class="glass-card p-5 border-desert-primary/30">
+                                <h4 class="text-white font-bold mb-2">Forced Evolution</h4>
+                                <p class="text-sm text-desert-muted leading-relaxed">
+                                    To break the plateau, you are forced to evolve. That’s why the midnight coding sessions (Python, VBA, web dev) began. Not for a hobby, but for sheer survival to automate massive datasets.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Code / Reality Visualization -->
+                        <div class="relative glass-card overflow-hidden border-desert-primary/50 p-0 h-full flex flex-col bg-[#0d1117]">
+                            <div class="bg-black/80 p-2 flex justify-between items-center border-b border-gray-800">
+                                <div class="flex gap-1.5 ml-2">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <div class="text-xs text-gray-400 font-mono">automate_strategy.py - 02:43 AM</div>
+                            </div>
+                            <div class="p-4 flex-grow text-xs md:text-sm leading-relaxed font-mono overflow-hidden">
+<pre><code><span class="text-gray-500"># When you hit a plateau, build a ladder.</span>
+<span class="text-purple-400">import</span> pandas <span class="text-purple-400">as</span> pd
+
+<span class="text-blue-300">def</span> <span class="text-yellow-200">break_the_plateau</span>(daily_routine):
+    <span class="text-purple-400">if</span> daily_routine == <span class="text-green-300">"stagnant"</span>:
+        <span class="text-gray-500"># Learn to code at 2 AM</span>
+        new_skill = <span class="text-yellow-200">learn_python</span>()
+        <span class="text-purple-400">return</span> <span class="text-yellow-200">automate_workflow</span>(new_skill)
+    <span class="text-purple-400">else</span>:
+        <span class="text-purple-400">return</span> <span class="text-green-300">"Keep pushing."</span>
+
+<span class="text-gray-500"># Stop doing it manually. Engineer it.</span></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 14: Navigating the Trenches -->
+        <section class="slide theme-desert">
+            <div class="content-container h-full flex flex-col justify-center pl-0 md:pl-12">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <span class="inline-block py-1 px-3 rounded text-desert-accent text-xs font-bold tracking-widest uppercase mb-3 bg-black/50 border border-desert-accent/30">
+                        Slide 13
+                    </span>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4 text-white font-serif">
+                        Navigating the Trenches
+                    </h1>
+                    <h2 class="text-xl md:text-2xl text-desert-muted font-light mb-8 italic">
+                        Conflicts, Legacy Systems, & Resistance
+                    </h2>
+                    
+                    <p class="text-sm md:text-base text-desert-text mb-8">
+                        When you bring data to change entrenched systems, people fight back. You aren't just an analyst anymore; you become a mediator, a negotiator, and sometimes the "bad guy."
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="glass-card p-5 border-t-2 border-t-red-400/50 hover:bg-white/5 transition-colors">
+                            <h3 class="text-red-300 font-bold text-lg mb-2">Legacy Mindsets</h3>
+                            <p class="text-sm text-desert-muted">
+                                "We've always done it this way." Overcoming years of ingrained corporate habits requires more behavioral psychology than any dataset.
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-5 border-t-2 border-t-desert-primary hover:bg-white/5 transition-colors">
+                            <h3 class="text-desert-primary font-bold text-lg mb-2">Veto Authority</h3>
+                            <p class="text-sm text-desert-muted">
+                                When challenging skewed metrics or subjective appraisals with hard data, you inevitably clash with those who hold traditional power.
+                            </p>
+                        </div>
+                        
+                        <div class="glass-card p-5 border-t-2 border-t-green-400/50 hover:bg-white/5 transition-colors">
+                            <h3 class="text-green-300 font-bold text-lg mb-2">The Negotiation</h3>
+                            <p class="text-sm text-desert-muted">
+                                The solution isn't proving you are right. It is presenting the data so stakeholders feel the change was their idea all along.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 15: The Academic Parallel (Check & Balance) -->
+        <section class="slide theme-desert">
+            <div class="content-container h-full items-start pt-24 md:pt-36 justify-center pl-0">
+                <div class="text-content w-full gsap-reveal flex flex-col justify-center items-center text-center">
+                    <span class="inline-block py-1 px-3 rounded text-desert-accent text-xs font-bold tracking-widest uppercase mb-4 bg-black/50 border border-desert-accent/30">
+                        Slide 14
+                    </span>
+                    <h1 class="text-4xl md:text-5xl font-black mb-8 leading-tight tracking-tighter text-white font-serif drop-shadow-lg">
+                        The Check & Balance: <br/>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-desert-primary to-desert-accent font-sans font-light">Academia vs. Industry</span>
+                    </h1>
+                    
+                    <div class="glass-card p-6 md:p-10 max-w-4xl w-full border-desert-primary/40 shadow-[0_0_40px_rgba(245,158,11,0.1)] relative">
+                        <p class="text-base md:text-lg text-desert-text mb-8 font-medium leading-relaxed italic">
+                            Let's not romanticize academia while demonizing corporate, or vice versa. Both paths demand profound sacrifice. The question is: <strong class="text-white font-bold">which set of problems do you want to solve?</strong>
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                            <div class="bg-black/30 p-5 rounded-lg border border-desert-muted/30">
+                                <div class="text-white font-bold text-xl mb-3 border-b border-desert-muted/30 pb-2">The Academic Grind</div>
+                                <ul class="text-sm text-desert-muted space-y-3 list-disc pl-4">
+                                    <li>Fighting for limited grant funding.</li>
+                                    <li>Navigating intense departmental politics.</li>
+                                    <li>Defending methodology against hostile Reviewer #2.</li>
+                                    <li>The lonely, endless nights running SPSS models.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-black/30 p-5 rounded-lg border border-desert-primary/50 shadow-[inset_0_0_15px_rgba(245,158,11,0.1)]">
+                                <div class="text-desert-primary font-bold text-xl mb-3 border-b border-desert-primary/30 pb-2">The Corporate Trenches</div>
+                                <ul class="text-sm text-desert-text/90 space-y-3 list-disc pl-4">
+                                    <li>Fighting for budget and stakeholder buy-in.</li>
+                                    <li>Navigating intense cross-functional politics.</li>
+                                    <li>Defending strategy against resistant executives.</li>
+                                    <li>The lonely, endless nights writing automation scripts.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 16: Session Intro -->
+        <section class="slide theme-park">
+            <div class="content-container h-full items-center justify-center w-full max-w-full">
+                <div class="text-content text-center gsap-reveal flex flex-col items-center">
+                    <span class="inline-block py-1.5 px-5 rounded-full bg-white/60 text-park-primary text-sm font-bold tracking-widest uppercase mb-6 border border-park-primary/30 shadow-sm backdrop-blur-sm">
+                        Session 4
+                    </span>
+                    <h1 class="text-5xl md:text-7xl font-bold mb-4 leading-tight text-park-text font-serif">
+                        The Multi-Disciplinary <br/> Toolkit
+                    </h1>
+                    <h2 class="text-2xl md:text-4xl text-park-primary font-light mb-8 font-sans italic">
+                        The Death of the Niche.
+                    </h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 17: The IQ Gatekeeper -->
+        <section class="slide theme-park">
+            <div class="content-container h-full items-center">
+                <div class="text-content text-left md:text-right gsap-reveal">
+                    <span class="inline-block py-1.5 px-4 rounded-full bg-white/60 text-park-primary text-xs font-bold tracking-widest uppercase mb-4 border border-park-primary/30 shadow-sm backdrop-blur-sm">
+                        Slide 15
+                    </span>
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight text-park-text font-serif">
+                        The IQ Gatekeeper
+                    </h1>
+                    <h2 class="text-xl md:text-2xl text-park-muted font-light mb-8">
+                        Firms don't want your thesis. <br/> <span class="text-park-primary font-semibold">They want a nimble mind.</span>
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 md:text-left text-sm md:text-base">
+                        <div class="glass-card p-6 border-t-4 border-park-primary">
+                            <h3 class="text-park-primary font-bold mb-3 text-lg flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                                The Capacity Test
+                            </h3>
+                            <p class="text-park-text/90 leading-relaxed mb-3">
+                                The first corporate hurdle is often a rigorous cognitive test. They test raw capacity—how quickly you process unfamiliar patterns, not how well you memorized literature.
+                            </p>
+                            <p class="text-park-primary font-semibold italic text-sm">
+                                Can you learn on the fly?
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-6 border-t-4 border-park-accent">
+                            <h3 class="text-park-text font-bold mb-3 text-lg flex items-center gap-2">
+                                <svg class="w-5 h-5 text-park-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Adapt or Perish
+                            </h3>
+                            <p class="text-park-text/90 leading-relaxed">
+                                The corporate landscape shifts brutally fast. If you are deeply entrenched in a single niche, you become fragile. Survival demands the intellect to abandon what you know and quickly learn what the market needs.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 18: Numbers & Logic -->
+        <section class="slide theme-park">
+            <div class="content-container h-full flex flex-col justify-center pl-0 md:pl-12">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <span class="inline-block py-1.5 px-4 rounded-full bg-white/60 text-park-primary text-xs font-bold tracking-widest uppercase mb-4 border border-park-primary/30 shadow-sm backdrop-blur-sm">
+                        Slide 16
+                    </span>
+                    <h1 class="text-3xl md:text-5xl font-bold mb-2 text-park-text font-serif">
+                        Numerical & Logical Dexterity
+                    </h1>
+                    <h2 class="text-lg md:text-xl text-park-muted font-light mb-8 italic">
+                        The anchors of objective defense.
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-6">
+                        <div class="glass-card p-6 border-l-4 border-l-park-primary hover:shadow-lg transition-shadow">
+                            <h4 class="text-park-text font-bold mb-3 text-xl flex items-center gap-2">
+                                <span class="bg-park-primary text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
+                                The Objective Lens
+                            </h4>
+                            <p class="text-sm md:text-base text-park-text/90 leading-relaxed">
+                                Researchers often fall into the trap of endless qualitative reading. Basic math and financial modeling break down massive, subjective behavioral problems into hard, objective realities.
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-6 border-l-4 border-l-park-accent hover:shadow-lg transition-shadow">
+                            <h4 class="text-park-text font-bold mb-3 text-xl flex items-center gap-2">
+                                <span class="bg-park-accent text-park-text w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
+                                Verbal Logic
+                            </h4>
+                            <p class="text-sm md:text-base text-park-text/90 leading-relaxed">
+                                Written rationalization isn't enough. You must articulate sound arguments verbally and hold your ground in a boardroom—especially when no one wants to listen.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 19: Comprehension & Judgement -->
+        <section class="slide theme-park">
+            <div class="content-container h-full flex flex-col justify-center pl-0 md:pl-12">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <span class="inline-block py-1.5 px-4 rounded-full bg-white/60 text-park-primary text-xs font-bold tracking-widest uppercase mb-4 border border-park-primary/30 shadow-sm backdrop-blur-sm">
+                        Slide 17
+                    </span>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4 text-park-text font-serif">
+                        Leadership & Execution
+                    </h1>
+                    <p class="text-sm md:text-base text-park-muted mb-8 leading-relaxed max-w-2xl font-medium">
+                        Data is just a prerequisite. The real value is how you relay it, defend it, and act on it.
+                    </p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="glass-card p-6 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-park-primary/10 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                            <h3 class="text-park-primary font-bold text-xl mb-3">Dynamic Comprehension</h3>
+                            <p class="text-sm text-park-text/90 leading-relaxed">
+                                Leadership isn't a one-way paper submission. It’s dynamic. You must rapidly synthesize complex data, relay it cleanly, and fiercely defend it against pushback.
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-6 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-park-accent/20 rounded-bl-full transition-transform group-hover:scale-150"></div>
+                            <h3 class="text-park-text font-bold text-xl mb-3">Situational Judgement</h3>
+                            <p class="text-sm text-park-text/90 leading-relaxed mb-2">
+                                It's not about being 'theoretically right'. It’s about being brave enough to make the call. 
+                            </p>
+                            <p class="text-sm text-park-primary font-semibold italic border-l-2 border-park-primary pl-2">
+                                "What is the ROI? What is the risk?"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 20: Malaysia Airlines Case Study -->
+        <section class="slide theme-park">
+            <div class="content-container h-full items-start pt-20 md:pt-28 justify-center pl-0">
+                <div class="text-content w-full gsap-reveal flex flex-col justify-center">
+                    <span class="inline-block py-1.5 px-4 rounded-full bg-white/60 text-park-primary text-xs font-bold tracking-widest uppercase mb-4 border border-park-primary/30 shadow-sm backdrop-blur-sm self-start">
+                        Slide 18
+                    </span>
+                    <h1 class="text-4xl md:text-5xl font-black mb-6 leading-tight tracking-tight text-park-text font-serif">
+                        The All-Rounder Toolkit: <br/>
+                        <span class="text-park-primary font-sans font-light">The MAG Turnaround</span>
+                    </h1>
+                    
+                    <p class="text-sm md:text-base text-park-muted mb-6 max-w-3xl font-medium">
+                        How Datuk Captain Izham Ismail saved Malaysia Airlines from "technical bankruptcy" by blending operational rigor, financial auditing, and HR rewards into a single data-driven execution.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="glass-card p-5 border-t-4 border-t-red-400">
+                            <h3 class="text-park-text font-bold text-lg mb-2 flex items-center gap-2">
+                                <span class="text-red-500">1.</span> Diagnose
+                            </h3>
+                            <p class="text-sm text-park-text/80 leading-relaxed">
+                                Used harsh metrics to map <strong class="text-park-text">RM25.7B in liabilities</strong> and <strong class="text-park-text">-RM900M daily cash flow</strong> to force a massive financial restructuring.
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-5 border-t-4 border-t-park-accent">
+                            <h3 class="text-park-text font-bold text-lg mb-2 flex items-center gap-2">
+                                <span class="text-park-accent">2.</span> Restructure
+                            </h3>
+                            <p class="text-sm text-park-text/80 leading-relaxed">
+                                Abolished fixed waste. Tied 100% of rewards to a <strong class="text-park-text">3-Tiered KPI model</strong>: Commercial Yield, On-Time Operations, and Productivity.
+                            </p>
+                        </div>
+                        
+                        <div class="glass-card p-5 border-t-4 border-t-park-primary">
+                            <h3 class="text-park-text font-bold text-lg mb-2 flex items-center gap-2">
+                                <span class="text-park-primary">3.</span> Execute
+                            </h3>
+                            <p class="text-sm text-park-text/80 leading-relaxed">
+                                Cut inefficient legacy contracts, achieved the first profit in years (<strong class="text-park-text">RM137M by 2025</strong>), and shifted focus to 80% international revenue.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 21: Session Intro -->
+        <section class="slide theme-twilight">
+            <div class="content-container h-full items-center justify-center w-full max-w-full">
+                <div class="text-content text-center gsap-reveal flex flex-col items-center">
+                    <span class="inline-block py-1.5 px-5 rounded-full bg-twilight-primary/20 text-twilight-primary text-sm font-bold tracking-widest uppercase mb-6 border border-twilight-primary/30 shadow-[0_0_15px_rgba(129,140,248,0.3)] backdrop-blur-sm">
+                        Session 5
+                    </span>
+                    <h1 class="text-5xl md:text-7xl font-bold mb-4 leading-tight text-white font-serif">
+                        The Actionable Framework
+                    </h1>
+                    <h2 class="text-2xl md:text-4xl text-twilight-muted font-light mb-8 font-sans">
+                        How to actually <span class="text-twilight-accent italic">make the pivot.</span>
+                    </h2>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 22: The Sunk Cost Fallacy -->
+        <section class="slide theme-twilight">
+            <div class="content-container h-full flex flex-col justify-center pl-0 md:pl-12">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <span class="inline-block py-1 px-3 rounded text-twilight-primary text-xs font-bold tracking-widest uppercase mb-3 bg-black/50 border border-twilight-primary/30">
+                        Slide 20
+                    </span>
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4 text-white font-serif drop-shadow-md">
+                        The Sunk Cost Trap
+                    </h1>
+                    
+                    <p class="text-lg text-twilight-muted mb-8 max-w-2xl font-light">
+                        "I spent 4 years researching this specific niche. If I leave academia now, it was all a waste."
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                        <div class="glass-card p-6 md:p-8 border-t-4 border-t-red-400/50 relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 w-16 h-16 bg-red-500/10 rounded-full blur-xl"></div>
+                            <h3 class="text-white font-bold mb-3 text-xl flex items-center gap-2">
+                                The Illusion
+                            </h3>
+                            <p class="text-sm text-twilight-muted leading-relaxed">
+                                You believe your value is tied to your thesis title. You assume the corporate world has no use for someone who wrote 80,000 words on a highly specific social science phenomenon.
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-6 md:p-8 border-t-4 border-t-twilight-accent relative overflow-hidden shadow-[0_0_20px_rgba(253,224,71,0.1)]">
+                            <div class="absolute -right-4 -top-4 w-16 h-16 bg-twilight-accent/10 rounded-full blur-xl"></div>
+                            <h3 class="text-twilight-accent font-bold mb-3 text-xl flex items-center gap-2">
+                                The Reality
+                            </h3>
+                            <p class="text-sm text-white/90 leading-relaxed mb-4">
+                                You didn't just learn a topic. You learned <strong class="text-white">how to learn</strong>. You learned how to dissect impossible problems, manage long-term projects, and defend data against brutal scrutiny.
+                            </p>
+                            <p class="text-xs text-twilight-accent/80 uppercase tracking-widest font-bold">
+                                Your toolkit is the asset, not the topic.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 23: Translating Academic Skills -->
+        <section class="slide theme-twilight">
+            <div class="content-container h-full items-start pt-24 md:pt-36 justify-center pl-0">
+                <div class="text-content w-full gsap-reveal flex flex-col justify-center">
+                    <span class="inline-block py-1 px-3 rounded text-twilight-primary text-xs font-bold tracking-widest uppercase mb-3 bg-black/50 border border-twilight-primary/30 self-start">
+                        Slide 21
+                    </span>
+                    <h1 class="text-3xl md:text-5xl font-black mb-2 leading-tight text-white font-serif">
+                        The Translation Matrix
+                    </h1>
+                    <h2 class="text-lg md:text-xl text-twilight-muted font-light mb-8">
+                        How to sell your academic research to the industry.
+                    </h2>
+                    
+                    <div class="flex flex-col gap-4 w-full max-w-4xl">
+                        <!-- Matrix Row 1 -->
+                        <div class="flex flex-col md:flex-row items-stretch gap-2 w-full group">
+                            <div class="md:w-5/12 bg-black/40 border border-white/10 p-4 rounded-t-lg md:rounded-l-lg md:rounded-tr-none flex items-center">
+                                <div>
+                                    <span class="text-xs text-twilight-muted uppercase tracking-widest block mb-1">Academia</span>
+                                    <p class="text-white font-semibold">Running SPSS / R Models</p>
+                                </div>
+                            </div>
+                            <div class="hidden md:flex w-2/12 items-center justify-center bg-twilight-primary/10 border-y border-twilight-primary/20 transition-colors group-hover:bg-twilight-primary/30">
+                                <svg class="w-6 h-6 text-twilight-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            </div>
+                            <div class="md:w-5/12 bg-twilight-primary/20 border border-twilight-primary/40 p-4 rounded-b-lg md:rounded-r-lg md:rounded-bl-none flex items-center shadow-[0_0_15px_rgba(129,140,248,0.1)] transition-transform group-hover:translate-x-2">
+                                <div>
+                                    <span class="text-xs text-twilight-primary uppercase tracking-widest block mb-1">Industry</span>
+                                    <p class="text-white font-semibold">Predictive Analytics & Automation Pipelines</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Matrix Row 2 -->
+                        <div class="flex flex-col md:flex-row items-stretch gap-2 w-full group">
+                            <div class="md:w-5/12 bg-black/40 border border-white/10 p-4 rounded-t-lg md:rounded-l-lg md:rounded-tr-none flex items-center">
+                                <div>
+                                    <span class="text-xs text-twilight-muted uppercase tracking-widest block mb-1">Academia</span>
+                                    <p class="text-white font-semibold">Massive Literature Reviews</p>
+                                </div>
+                            </div>
+                            <div class="hidden md:flex w-2/12 items-center justify-center bg-twilight-primary/10 border-y border-twilight-primary/20 transition-colors group-hover:bg-twilight-primary/30">
+                                <svg class="w-6 h-6 text-twilight-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            </div>
+                            <div class="md:w-5/12 bg-twilight-primary/20 border border-twilight-primary/40 p-4 rounded-b-lg md:rounded-r-lg md:rounded-bl-none flex items-center shadow-[0_0_15px_rgba(129,140,248,0.1)] transition-transform group-hover:translate-x-2">
+                                <div>
+                                    <span class="text-xs text-twilight-primary uppercase tracking-widest block mb-1">Industry</span>
+                                    <p class="text-white font-semibold">Market Synthesis & Strategic Problem Solving</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Matrix Row 3 -->
+                        <div class="flex flex-col md:flex-row items-stretch gap-2 w-full group">
+                            <div class="md:w-5/12 bg-black/40 border border-white/10 p-4 rounded-t-lg md:rounded-l-lg md:rounded-tr-none flex items-center">
+                                <div>
+                                    <span class="text-xs text-twilight-muted uppercase tracking-widest block mb-1">Academia</span>
+                                    <p class="text-white font-semibold">Qualitative / Phenomenological Interviews</p>
+                                </div>
+                            </div>
+                            <div class="hidden md:flex w-2/12 items-center justify-center bg-twilight-accent/10 border-y border-twilight-accent/20 transition-colors group-hover:bg-twilight-accent/30">
+                                <svg class="w-6 h-6 text-twilight-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                            </div>
+                            <div class="md:w-5/12 bg-twilight-accent/20 border border-twilight-accent/40 p-4 rounded-b-lg md:rounded-r-lg md:rounded-bl-none flex items-center shadow-[0_0_15px_rgba(253,224,71,0.15)] transition-transform group-hover:translate-x-2">
+                                <div>
+                                    <span class="text-xs text-twilight-accent uppercase tracking-widest block mb-1">Industry</span>
+                                    <p class="text-white font-semibold">Stakeholder Management & User Experience (UX)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 24: The Proactive Engine -->
+        <section class="slide theme-twilight">
+            <div class="content-container h-full flex flex-col justify-center pl-0 md:pl-12">
+                <div class="text-content w-full self-end gsap-reveal">
+                    <span class="inline-block py-1 px-3 rounded text-twilight-primary text-xs font-bold tracking-widest uppercase mb-3 bg-black/50 border border-twilight-primary/30">
+                        Slide 22
+                    </span>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4 text-white font-serif drop-shadow-md">
+                        The Proactive Engine
+                    </h1>
+                    <p class="text-lg text-twilight-muted mb-8 max-w-2xl font-light">
+                        When the academic structure disappears, you must build your own curriculum to stay sharp. This is the daily survival kit.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="glass-card p-5 border-l-4 border-l-twilight-accent bg-black/30 hover:bg-black/50 transition-colors">
+                            <h3 class="text-twilight-accent font-bold mb-2 flex items-center gap-2 text-lg">
+                                <span class="bg-twilight-accent/20 text-twilight-accent w-6 h-6 rounded flex items-center justify-center text-xs">1</span>
+                                Read Relentlessly
+                            </h3>
+                            <p class="text-sm text-white/80 leading-relaxed">
+                                Read outside your discipline. Devour business strategy, behavioral economics, and biographies. The best solutions come from cross-pollinating ideas.
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-5 border-l-4 border-l-twilight-primary bg-black/30 hover:bg-black/50 transition-colors">
+                            <h3 class="text-twilight-primary font-bold mb-2 flex items-center gap-2 text-lg">
+                                <span class="bg-twilight-primary/20 text-twilight-primary w-6 h-6 rounded flex items-center justify-center text-xs">2</span>
+                                Collide with Reality (Network)
+                            </h3>
+                            <p class="text-sm text-white/80 leading-relaxed">
+                                Burst the academic bubble. Talk to engineers, marketers, and founders. Meet people who do not care about your thesis, but care about how you think.
+                            </p>
+                        </div>
+
+                        <div class="glass-card p-5 border-l-4 border-l-green-400/70 bg-black/30 hover:bg-black/50 transition-colors">
+                            <h3 class="text-green-300 font-bold mb-2 flex items-center gap-2 text-lg">
+                                <span class="bg-green-400/20 text-green-300 w-6 h-6 rounded flex items-center justify-center text-xs">3</span>
+                                Force Skill Acquisition
+                            </h3>
+                            <p class="text-sm text-white/80 leading-relaxed">
+                                When you hit a wall, build a new ladder. Don't wait for a course. Learn Python, master financial modeling, pick up UI/UX design. Build your own tools.
+                            </p>
+                        </div>
+                        
+                        <div class="glass-card p-5 border-l-4 border-l-purple-400/70 bg-black/30 hover:bg-black/50 transition-colors">
+                            <h3 class="text-purple-300 font-bold mb-2 flex items-center gap-2 text-lg">
+                                <span class="bg-purple-400/20 text-purple-300 w-6 h-6 rounded flex items-center justify-center text-xs">4</span>
+                                Open-Source Your Mind
+                            </h3>
+                            <p class="text-sm text-white/80 leading-relaxed">
+                                Don't wait for peer review to validate your insights. Share your raw ideas, write blogs, discuss on LinkedIn. Feedback in the real world is immediate.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 glass-card p-4 border border-white/10 flex items-center gap-4 bg-gradient-to-r from-black/60 to-transparent">
+                        <div class="w-12 h-12 rounded-full bg-twilight-primary/20 flex items-center justify-center border border-twilight-primary/50 shrink-0">
+                            <svg class="w-6 h-6 text-twilight-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-sm">5. Cognitive Calibration (Brain Games)</h3>
+                            <p class="text-xs text-twilight-muted mt-1">
+                                Treat raw intelligence like a muscle. Play strategy games, logic puzzles, or build apps (like the Consultant Aptitude Trainer) to keep your pattern recognition aggressive.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 25: Closing & Q&A -->
+        <section class="slide theme-twilight">
+            <div class="content-container h-full items-center justify-center w-full max-w-full">
+                <div class="text-content text-center gsap-reveal flex flex-col items-center">
+                    
+                    <h1 class="text-5xl md:text-7xl font-bold mb-6 leading-tight text-white font-serif drop-shadow-xl">
+                        "Driven by Purpose, <br/>
+                        <span class="text-twilight-accent font-sans font-light italic">Guided by Science."</span>
+                    </h1>
+                    
+                    <p class="text-lg md:text-xl text-twilight-muted mb-12 max-w-2xl font-light">
+                        The industry is waiting for leaders who can bridge the gap between human behavior and hard data. <br/><strong class="text-white">You already have the tools.</strong>
+                    </p>
+                    
+                    <div class="w-24 h-px bg-gradient-to-r from-transparent via-twilight-primary to-transparent mb-8"></div>
+                    
+                    <p class="text-twilight-primary font-bold tracking-widest uppercase mb-2">Thank You, UTM PGSS.</p>
+                    <p class="text-sm text-white/50 mb-8">Passing the floor back to Moderator Radin Ahmad Taufik.</p>
+                    
+                    <div class="glass-card px-8 py-4 inline-flex items-center gap-4 hover:bg-white/10 transition-colors cursor-pointer border-twilight-accent/40 shadow-[0_0_20px_rgba(253,224,71,0.1)]">
+                        <svg class="w-6 h-6 text-twilight-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        <span class="text-white font-semibold text-lg tracking-wide">Q&A Session</span>
+                    </div>
+                </div>
+            </div>
+        </section>    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            /* ---------------------------------------------------------------
+               PARTICLE GENERATORS (one system per theme)
+            --------------------------------------------------------------- */
+            const firefliesContainer = document.getElementById('fireflies-container');
+            const snowContainer = document.getElementById('snow-container');
+            const dustContainer = document.getElementById('dust-container');
+            const particleContainer = document.getElementById('particle-container'); // sun motes (park)
+            const starContainer = document.getElementById('star-container');
+
+            const numFireflySnow = 35;
+            for (let i = 0; i < numFireflySnow; i++) {
+                let firefly = document.createElement('div');
+                firefly.classList.add('firefly');
+                let size = Math.random() * 4 + 2;
+                firefly.style.width = `${size}px`;
+                firefly.style.height = `${size}px`;
+                firefly.style.left = `${Math.random() * 100}vw`;
+                firefly.style.animationDuration = `${Math.random() * 10 + 10}s, 4s`;
+                firefly.style.animationDelay = `${Math.random() * 10}s, ${Math.random() * 5}s`;
+                firefliesContainer.appendChild(firefly);
+
+                let snow = document.createElement('div');
+                snow.classList.add('snowflake');
+                let snowSize = Math.random() * 5 + 2;
+                snow.style.width = `${snowSize}px`;
+                snow.style.height = `${snowSize}px`;
+                snow.style.left = `${Math.random() * 100}vw`;
+                snow.style.animationDuration = `${Math.random() * 8 + 8}s`;
+                snow.style.animationDelay = `${Math.random() * 10}s`;
+                snowContainer.appendChild(snow);
+            }
+
+            const numDust = 45;
+            for (let i = 0; i < numDust; i++) {
+                let dust = document.createElement('div');
+                dust.classList.add('dust-particle');
+                let size = Math.random() * 3 + 1;
+                dust.style.width = `${size}px`;
+                dust.style.height = `${size}px`;
+                dust.style.top = `${Math.random() * 100}vh`;
+                dust.style.animationDuration = `${Math.random() * 6 + 6}s`;
+                dust.style.animationDelay = `${Math.random() * 8}s`;
+                dustContainer.appendChild(dust);
+            }
+
+            const numMotes = 25;
+            for (let i = 0; i < numMotes; i++) {
+                let mote = document.createElement('div');
+                mote.classList.add('sun-mote');
+                let size = Math.random() * 6 + 4;
+                mote.style.width = `${size}px`;
+                mote.style.height = `${size}px`;
+                mote.style.left = `${Math.random() * 100}vw`;
+                mote.style.animationDuration = `${Math.random() * 10 + 8}s`;
+                mote.style.animationDelay = `${Math.random() * 10}s`;
+                particleContainer.appendChild(mote);
+            }
+
+            const numStars = 150;
+            for (let i = 0; i < numStars; i++) {
+                let star = document.createElement('div');
+                star.classList.add('star');
+                let size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.top = `${Math.random() * 60}vh`;
+                star.style.left = `${Math.random() * 100}vw`;
+                star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                starContainer.appendChild(star);
+            }
+
+            /* ---------------------------------------------------------------
+               THEME CONFIG
+            --------------------------------------------------------------- */
+            const mBack = document.getElementById('mountain-back');
+            const mMid = document.getElementById('mountain-mid');
+            const mFront = document.getElementById('mountain-front');
+
+            const THEMES = {
+                spring: {
+                    label: 'Huzaifah Adam | Session 1: The Catalyst',
+                    bg: 'bg-spring',
+                    accent: null,
+                    particles: ['fireflies-container'],
+                    landscape: 'landscape-spring-winter',
+                    avatar: 'avatar-spring-winter',
+                    mountainColors: { back: '#043a2b', mid: '#064e3b', front: '#022c22' },
+                    header: 'text-brand-accent',
+                    num: 'text-brand-accent',
+                    muted: 'text-gray-400',
+                    pill: 'bg-black/30 border-white/20',
+                    track: 'bg-black/50',
+                    bar: '#bef264',
+                    prevBtn: 'bg-brand-darkest/80 hover:bg-brand-dark text-white border border-brand-primary/50',
+                    nextBtn: 'bg-brand-primary hover:bg-emerald-400 text-brand-darkest shadow-[0_0_15px_rgba(16,185,129,0.5)]',
+                    swap: { spring: '#bef264', winter: null }
+                },
+                winter: {
+                    label: 'Huzaifah Adam | Session 2: The Rational Pivot',
+                    bg: 'bg-winter',
+                    accent: null,
+                    particles: ['snow-container'],
+                    landscape: 'landscape-spring-winter',
+                    avatar: 'avatar-spring-winter',
+                    mountainColors: { back: '#0f172a', mid: '#1e293b', front: '#cbd5e1' },
+                    header: 'text-blue-300',
+                    num: 'text-blue-300',
+                    muted: 'text-gray-400',
+                    pill: 'bg-black/30 border-white/20',
+                    track: 'bg-black/50',
+                    bar: '#60a5fa',
+                    prevBtn: 'bg-brand-darkest/80 hover:bg-brand-dark text-white border border-brand-primary/50',
+                    nextBtn: 'bg-brand-primary hover:bg-emerald-400 text-brand-darkest shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                },
+                desert: {
+                    label: 'Huzaifah Adam | Session 3: The Industry Reality',
+                    bg: 'bg-desert',
+                    accent: 'accent-desert',
+                    particles: ['dust-container'],
+                    landscape: 'landscape-desert',
+                    avatar: 'avatar-desert',
+                    header: 'text-white drop-shadow-md',
+                    num: 'text-desert-accent',
+                    muted: 'text-desert-muted',
+                    pill: 'bg-black/40 border-desert-accent/30',
+                    track: 'bg-black/60',
+                    bar: '#d97706',
+                    prevBtn: 'bg-desert-skyTop/80 hover:bg-desert-skyMid text-white border border-desert-primary/50',
+                    nextBtn: 'bg-desert-primary hover:bg-desert-accent text-desert-skyTop shadow-[0_0_15px_rgba(245,158,11,0.4)]'
+                },
+                park: {
+                    label: 'Huzaifah Adam | Session 4: The Nimble Mind',
+                    bg: 'bg-park',
+                    accent: 'accent-park',
+                    particles: ['particle-container'],
+                    landscape: 'landscape-park',
+                    avatar: 'avatar-park',
+                    header: 'text-park-text drop-shadow-sm bg-white/40 px-4 py-1 rounded-full',
+                    num: 'text-park-primary',
+                    muted: 'text-park-muted',
+                    pill: 'bg-white/60 border-park-primary/30 shadow-sm',
+                    track: 'bg-black/10',
+                    bar: '#059669',
+                    prevBtn: 'bg-white/80 hover:bg-white text-park-text border border-park-primary/30 shadow-md',
+                    nextBtn: 'bg-park-primary hover:bg-emerald-500 text-white shadow-[0_4px_15px_rgba(5,150,105,0.4)]'
+                },
+                twilight: {
+                    label: 'Huzaifah Adam | Session 5: The Actionable Framework',
+                    bg: 'bg-twilight',
+                    accent: 'accent-twilight',
+                    particles: ['star-container', 'shooting-stars'],
+                    landscape: 'landscape-twilight',
+                    avatar: 'avatar-twilight',
+                    header: 'text-twilight-text drop-shadow-sm bg-black/40 px-4 py-1 rounded-full border border-white/10',
+                    num: 'text-twilight-primary',
+                    muted: 'text-twilight-muted',
+                    pill: 'bg-black/60 border-twilight-primary/30 shadow-sm',
+                    track: 'bg-black/30',
+                    bar: '#818cf8',
+                    prevBtn: 'bg-white/10 hover:bg-white/20 text-white border border-twilight-primary/30 shadow-md',
+                    nextBtn: 'bg-twilight-primary hover:bg-indigo-400 text-twilight-skyTop shadow-[0_4px_15px_rgba(129,140,248,0.4)]'
+                }
+            };
+
+            const ALL_BG = ['bg-spring', 'bg-winter', 'bg-desert', 'bg-park', 'bg-twilight'];
+            const ALL_ACCENTS = ['accent-desert', 'accent-park', 'accent-twilight'];
+            const ALL_PARTICLES = ['fireflies-container', 'snow-container', 'dust-container', 'particle-container', 'star-container', 'shooting-stars'];
+            const ALL_LANDSCAPES = ['landscape-spring-winter', 'landscape-desert', 'landscape-park', 'landscape-twilight'];
+            const ALL_AVATARS = ['avatar-spring-winter', 'avatar-desert', 'avatar-park', 'avatar-twilight'];
+
+            function showOnly(allIds, activeIds) {
+                allIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    if (activeIds.includes(id)) {
+                        el.classList.add('theme-visible');
+                    } else {
+                        el.classList.remove('theme-visible');
+                    }
+                });
+            }
+
+            const session = document.getElementById('session-header');
+            const numEl = document.getElementById('current-slide-num');
+            const mutedEl = document.getElementById('total-slide-num');
+            const pillEl = document.getElementById('slide-counter-pill');
+            const trackEl = document.getElementById('progress-track');
+            const barEl = document.getElementById('progress-bar');
+            const prevEl = document.getElementById('prev-btn');
+            const nextEl = document.getElementById('next-btn');
+
+            let currentThemeName = null;
+
+            function applyTheme(themeName) {
+                if (themeName === currentThemeName) return;
+                const cfg = THEMES[themeName];
+
+                showOnly(ALL_BG, [cfg.bg]);
+                showOnly(ALL_ACCENTS, cfg.accent ? [cfg.accent] : []);
+                showOnly(ALL_PARTICLES, cfg.particles);
+                showOnly(ALL_LANDSCAPES, [cfg.landscape]);
+                showOnly(ALL_AVATARS, [cfg.avatar]);
+
+                // Crossfade the spring/winter backpacker sub-avatar + recolor mountains
+                if (themeName === 'spring' || themeName === 'winter') {
+                    gsap.to('#avatar-spring', { autoAlpha: themeName === 'spring' ? 1 : 0, duration: 1 });
+                    gsap.to('#avatar-winter', { autoAlpha: themeName === 'winter' ? 1 : 0, duration: 1 });
+                    if (cfg.mountainColors) {
+                        gsap.to(mBack, { fill: cfg.mountainColors.back, duration: 1 });
+                        gsap.to(mMid, { fill: cfg.mountainColors.mid, duration: 1 });
+                        gsap.to(mFront, { fill: cfg.mountainColors.front, duration: 1 });
+                    }
+                }
+
+                session.textContent = cfg.label;
+                session.className = `text-sm tracking-widest font-semibold uppercase hidden md:block transition-colors duration-500 ${cfg.header}`;
+                numEl.className = `font-bold transition-colors duration-500 ${cfg.num}`;
+                mutedEl.className = `transition-colors duration-500 ${cfg.muted}`;
+                pillEl.className = `flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-sm border transition-colors duration-500 ${cfg.pill}`;
+                trackEl.className = `fixed bottom-0 left-0 w-full h-1 z-50 transition-colors duration-500 ${cfg.track}`;
+                barEl.style.backgroundColor = cfg.bar;
+                prevEl.className = `p-3 rounded-full transition-colors pointer-events-auto backdrop-blur duration-500 ${cfg.prevBtn}`;
+                nextEl.className = `p-3 rounded-full transition-all pointer-events-auto backdrop-blur duration-500 ${cfg.nextBtn}`;
+
+                currentThemeName = themeName;
+            }
+
+            /* ---------------------------------------------------------------
+               SLIDE NAVIGATION
+            --------------------------------------------------------------- */
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            let currentSlide = 0;
+            let isAnimating = false;
+
+            const progressBar = barEl;
+            const currentNumDisplay = numEl;
+            const totalNumDisplay = mutedEl;
+            const prevBtn = prevEl;
+            const nextBtn = nextEl;
+
+            function themeForIndex(i) {
+                return slides[i].classList.contains('theme-spring') ? 'spring'
+                     : slides[i].classList.contains('theme-winter') ? 'winter'
+                     : slides[i].classList.contains('theme-desert') ? 'desert'
+                     : slides[i].classList.contains('theme-park') ? 'park'
+                     : 'twilight';
+            }
+
+            function init() {
+                if (totalNumDisplay) {
+                    totalNumDisplay.textContent = `/ ${totalSlides}`;
+                }
+                slides.forEach((slide, index) => {
+                    if (index !== 0) {
+                        slide.classList.remove('active');
+                        gsap.set(slide, { autoAlpha: 0 });
+                    } else {
+                        gsap.set(slide, { autoAlpha: 1 });
+                        animateSlideIn(slide);
+                    }
+                });
+                applyTheme(themeForIndex(0));
+                updateUI();
+            }
+
+            function animateSlideIn(slide) {
+                const elements = slide.querySelectorAll('.gsap-reveal');
+                if (elements.length > 0) {
+                    gsap.fromTo(elements,
+                        { y: 40, opacity: 0 },
+                        { y: 0, opacity: 1, duration: 0.9, stagger: 0.15, ease: "power3.out", overwrite: true }
+                    );
+                }
+
+                if (slide.querySelector('.branch-line')) {
+                    gsap.set(".branch-line", { strokeDashoffset: (i, target) => target.getAttribute('stroke-dasharray') });
+                    gsap.set(".node", { opacity: 0, scale: 0 });
+
+                    gsap.to(".base-line", { strokeDashoffset: 0, duration: 1, ease: "power2.inOut", delay: 0.5 });
+                    gsap.to(".base-node", { opacity: 1, scale: 1, duration: 0.3, stagger: 0.1, delay: 0.5 });
+                    gsap.to(".branch", { strokeDashoffset: 0, duration: 1.5, ease: "power2.out", stagger: 0.2, delay: 1.2 });
+                    gsap.to(".branch-node", { opacity: 1, scale: 1, duration: 0.5, stagger: 0.2, ease: "back.out(1.7)", delay: 1.5 });
+                }
+            }
+
+            function updateUI() {
+                const progress = ((currentSlide + 1) / totalSlides) * 100;
+                progressBar.style.width = `${progress}%`;
+                currentNumDisplay.textContent = currentSlide + 1;
+
+                applyTheme(themeForIndex(currentSlide));
+
+                prevBtn.style.opacity = currentSlide === 0 ? '0.3' : '1';
+                prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+
+                nextBtn.style.opacity = currentSlide === totalSlides - 1 ? '0.3' : '1';
+                nextBtn.style.pointerEvents = currentSlide === totalSlides - 1 ? 'none' : 'auto';
+            }
+
+            function goToSlide(index, direction = 'next') {
+                if (isAnimating || index < 0 || index >= totalSlides || index === currentSlide) return;
+
+                isAnimating = true;
+                const oldSlide = slides[currentSlide];
+                const newSlide = slides[index];
+
+                newSlide.classList.add('active');
+
+                const yOffset = direction === 'next' ? 100 : -100;
+
+                const tl = gsap.timeline({
+                    onComplete: () => {
+                        oldSlide.classList.remove('active');
+                        isAnimating = false;
+                        animateSlideIn(newSlide);
+                    }
+                });
+
+                tl.to(oldSlide, { autoAlpha: 0, y: -yOffset, duration: 0.6, ease: "power2.inOut" })
+                  .fromTo(newSlide,
+                      { autoAlpha: 0, y: yOffset },
+                      { autoAlpha: 1, y: 0, duration: 0.6, ease: "power2.out" },
+                      "-=0.3"
+                  );
+
+                currentSlide = index;
+                updateUI();
+            }
+
+            nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1, 'next'));
+            prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1, 'prev'));
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                    goToSlide(currentSlide + 1, 'next');
+                } else if (e.key === 'ArrowLeft') {
+                    goToSlide(currentSlide - 1, 'prev');
+                }
+            });
+
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            window.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, {passive: true});
+
+            window.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, {passive: true});
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                if (touchStartX - touchEndX > swipeThreshold) {
+                    goToSlide(currentSlide + 1, 'next');
+                }
+                if (touchEndX - touchStartX > swipeThreshold) {
+                    goToSlide(currentSlide - 1, 'prev');
+                }
+            }
+
+            init();
+        });
+    </script>
+</body>
+</html>F
